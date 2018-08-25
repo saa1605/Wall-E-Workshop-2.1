@@ -83,18 +83,18 @@ float sensor_value[4];
 
 float acce_angle[2];
 float setpoint = 0;
-float initial_angle = -11;
+float initial_angle = -2;
 float forward_angle = 7; 
 
 
 float pitch_angle = 0, pitch_error, prevpitch_error, pitchDifference, pitchCumulativeError, pitch_correction; 
 
-float pitchKp = 4;
-float pitchKi = 0.5;
-float pitchKd = 1;
+float pitchKp = 3;
+float pitchKi = 0.01;
+float pitchKd = 0;
 
 float lower_pwm_constrain = 60;
-float higher_pwm_constrain = 100;
+float higher_pwm_constrain = 90;
 float left_pwm = 0, right_pwm = 0;
 
 float absolute_pitch_correction = 0;
@@ -163,7 +163,7 @@ static void mcpwm_initialize()
  */
 static void bot_forward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle1, float duty_cycle2)
 {
-    printf("%s\n","BOT FORWARD");
+    // printf("%s\n","BOT FORWARD");
     mcpwm_set_duty(mcpwm_num, timer_num, MCPWM_OPR_A, duty_cycle1);
     mcpwm_set_duty(mcpwm_num, timer_num, MCPWM_OPR_B, duty_cycle2);
     gpio_set_level(GPIO_NUM0,0);
@@ -176,7 +176,7 @@ static void bot_forward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float 
 
 static void bot_backward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle1, float duty_cycle2)
 {
-    printf("%s\n","BOT BACKWARD");
+    // printf("%s\n","BOT BACKWARD");
     mcpwm_set_duty(mcpwm_num, timer_num, MCPWM_OPR_A, duty_cycle1);
     mcpwm_set_duty(mcpwm_num, timer_num, MCPWM_OPR_B, duty_cycle2);
     gpio_set_level(GPIO_NUM0,1);
@@ -429,13 +429,17 @@ float absolute(float number)
 
 void calculate_pitch_error()
 {
-    pitch_error = setpoint-pitch_angle;   
+    pitch_error = setpoint-pitch_angle; 
     pitchDifference = pitch_error - prevpitch_error;
     pitchCumulativeError += pitch_error;
-    if(pitchCumulativeError>40)
-        pitchCumulativeError = 40;
-    else if(pitchCumulativeError<-40)
-        pitchCumulativeError = -40;
+    if(pitch_error*prevpitch_error < 0)
+    {
+        pitchCumulativeError = 0;
+    }  
+    if(pitchCumulativeError>4000)
+        pitchCumulativeError = 4000;
+    else if(pitchCumulativeError<-4000)
+        pitchCumulativeError = -4000;
     pitch_correction = pitchKp * pitch_error + pitchKi * pitchCumulativeError - pitchKd * pitchDifference;
     prevpitch_error = pitch_error;
 }
@@ -445,14 +449,15 @@ void print_info()
     // printf("Angles by complimentary filter...\n");
     // printf("ROLL: %f\n", complimentary_angle[0]);
     // printf("Pitch Angle:%f\t",pitch_angle);
-    printf("Pitch Error%f\t",pitch_error);
+    // printf("Pitch Error%f\t",pitch_error);
     // printf("YAW CORRECTION: %f\t",yaw_correction);
     // printf("PITCH INPUT%f\n",absolute_pitch_correction );
     // printf("PITCH CORRECTION %f\n",pitch_correction );
     // printf("Absolute Pitch Correction: %f\t",absolute_pitch_correction);
     // printf("Yaw Correction: %f\n", yaw_correction);
-    printf("LEFT PWM: %f\t",left_pwm);
+    // printf("LEFT PWM: %f\t",left_pwm);
     // printf("RIGHT PWM: %f\n",right_pwm);
+    printf("Pitch pitchCumulativeError%f\n", pitchCumulativeError*pitchKi);
     printf("\n");
 }
 
@@ -532,7 +537,7 @@ void app_main()
             calculate_yaw_error();
             calculate_yaw_correction();
             absolute_pitch_correction = absolute(pitch_correction);
-            absolute_pitch_correction = constrain(absolute_pitch_correction,0,80);
+            absolute_pitch_correction = constrain(absolute_pitch_correction,0,100);
 
             
             //if bot is not balance, balance it at 190. Once it is balanced shift the the set-point ahead 
@@ -540,23 +545,24 @@ void app_main()
             if(!balanced)
             {
                 // printf("%s\n","Not balanced : ");
-                if (pitch_error > 2)
+                if (pitch_error > 0)
                 {
                     bot_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
 
                 }
 
-                else if (pitch_error < -2)
+                else if (pitch_error < 0)
                 {
                     bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
                 }
-                else
-                { 
-                    brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
-                    pitchCumulativeError = 0;
-                    // setpoint = forward_angle;
-                    // balanced = true;
-                }
+                // else
+                // { 
+                //     brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
+                //     pitchCumulativeError = 0;
+                //     // setpoint = forward_angle;
+                //     // balanced = true;
+                // }
+
                 // left_pwm = constrain(absolute_pitch_correction - yaw_correction, lower_pwm_constrain, higher_pwm_constrain);
                 // right_pwm = constrain(absolute_pitch_correction + yaw_correction, lower_pwm_constrain, higher_pwm_constrain);
                 left_pwm = constrain((absolute_pitch_correction), lower_pwm_constrain, higher_pwm_constrain);
