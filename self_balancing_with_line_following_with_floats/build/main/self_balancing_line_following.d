@@ -1,5 +1,5 @@
 self_balancing_line_following.o: \
- /Users/saaketAgashe/esp/self_balancing_line_following/main/self_balancing_line_following.c \
+ /Users/saaketAgashe/esp/Wall-E-Workshop-2.1/self_balancing_with_line_following_with_floats/main/self_balancing_line_following.c \
  /Users/saaketAgashe/esp/esp-idf/components/newlib/include/stdio.h \
  /Users/saaketAgashe/esp/esp-idf/components/newlib/include/_ansi.h \
  /Users/saaketAgashe/esp/esp-idf/components/newlib/include/newlib.h \
@@ -27,7 +27,7 @@ self_balancing_line_following.o: \
  /Users/saaketAgashe/esp/esp-idf/components/newlib/include/sys/_intsup.h \
  /Users/saaketAgashe/esp/esp-idf/components/esp32/include/esp_err.h \
  /Users/saaketAgashe/esp/esp-idf/components/newlib/platform_include/assert.h \
- /Users/saaketAgashe/esp/self_balancing_line_following/build/include/sdkconfig.h \
+ /Users/saaketAgashe/esp/Wall-E-Workshop-2.1/self_balancing_with_line_following_with_floats/build/include/sdkconfig.h \
  /Users/saaketAgashe/esp/esp-idf/components/newlib/include/stdlib.h \
  /Users/saaketAgashe/esp/esp-idf/components/newlib/include/machine/stdlib.h \
  /Users/saaketAgashe/esp/esp-idf/components/newlib/include/alloca.h \
@@ -155,7 +155,7 @@ self_balancing_line_following.o: \
 
 /Users/saaketAgashe/esp/esp-idf/components/newlib/platform_include/assert.h:
 
-/Users/saaketAgashe/esp/self_balancing_line_following/build/include/sdkconfig.h:
+/Users/saaketAgashe/esp/Wall-E-Workshop-2.1/self_balancing_with_line_following_with_floats/build/include/sdkconfig.h:
 
 /Users/saaketAgashe/esp/esp-idf/components/newlib/include/stdlib.h:
 
@@ -300,4 +300,4 @@ self_balancing_line_following.o: \
 /Users/saaketAgashe/esp/esp-idf/components/soc/esp32/include/soc/mcpwm_reg.h:
 
 /Users/saaketAgashe/esp/esp-idf/components/soc/esp32/include/soc/mcpwm_struct.h:
-/Users/saaketAgashe/esp/self_balancing_line_following/main/./self_balancing_line_following.c:
+/Users/saaketAgashe/esp/Wall-E-Workshop-2.1/self_balancing_with_line_following_with_floats/main/./self_balancing_line_following.c:
