@@ -71,7 +71,7 @@ int sensor_max_array[] = {2694,1778,1778,1860};
 * Self Balancing PID constants
 */
 #define pitchKp  5.85
-#define pitchKi  0.0325
+#define pitchKi  0.035          
 #define pitchKd  2.8
 
 #define MAX_PITCH_CORRECTION 100 
@@ -480,10 +480,10 @@ void print_info()
     // printf("PITCH CORRECTION %f\n",pitch_correction );
     // printf("Absolute Pitch Correction: %f\t",absolute_pitch_correction);
     // printf("Yaw Correction: %f\n", yaw_correction);
-    printf("LEFT PWM: %f\t",left_pwm);
-    printf("RIGHT PWM: %f\n",right_pwm);
+    // printf("LEFT PWM: %f\t",left_pwm);
+    // printf("RIGHT PWM: %f\n",right_pwm);
     // printf("Pitch pitchCumulativeError%f \n", integral_term);
-    printf("\n");
+    // printf("\n");
 }
 
 void app_main()
@@ -530,11 +530,11 @@ void app_main()
         ret = mpu6050_init(I2C_MASTER_NUM);
         while(ret != ESP_OK) 
         {
-            printf("INIT FAILED... Retry\n");
+            // printf("INIT FAILED... Retry\n");
             vTaskDelay(100/ portTICK_RATE_MS);
             ret = mpu6050_init(I2C_MASTER_NUM);
         }
-        printf("INIT SUCESS...\n");
+        // printf("INIT SUCESS...\n");
         vTaskDelay(100/ portTICK_RATE_MS);
         mcpwm_gpio_initialize();
         mcpwm_initialize();
