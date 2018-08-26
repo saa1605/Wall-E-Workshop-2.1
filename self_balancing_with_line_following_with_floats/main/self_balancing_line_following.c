@@ -50,6 +50,9 @@
 #define ACK_VAL    0x0         /*!< I2C ack value */
 #define NACK_VAL   0x1         /*!< I2C nack value */
 
+
+
+
 #define ACCE_START_ADD 0x3B
 #define GYRO_START_ADD 0x43
 
@@ -62,6 +65,28 @@ int sensor_max_array[] = {2694,1778,1778,1860};
 #define yaw_kP 1
 #define yaw_kI 0
 #define yaw_kD 0
+
+#define MAX_YAW_CORRECTION 20
+/*
+* Self Balancing PID constants
+*/
+#define pitchKp  5.85
+#define pitchKi  0.0325
+#define pitchKd  2.8
+
+#define MAX_PITCH_CORRECTION 100 
+#define MAX_INTEGRAL_ERROR 80
+
+#define MAX_PWM 100  
+#define MIN_PWM 65
+
+float setpoint = -1.5;
+float initial_angle = 0;
+float forward_angle = 0; 
+
+
+///////
+
 
 float counter = 0;
 uint32_t timer = 0;
@@ -82,19 +107,15 @@ uint32_t adc_reading[4];
 float sensor_value[4];
 
 float acce_angle[2];
-float setpoint = 0;
-float initial_angle = -2;
-float forward_angle = 7; 
 
 
-float pitch_angle = 0, pitch_error, prevpitch_error, pitchDifference, pitchCumulativeError, pitch_correction; 
 
-float pitchKp = 3;
-float pitchKi = 0.01;
-float pitchKd = 0;
+float pitch_angle = 0, pitch_error, prevpitch_error, pitchDifference, pitchCumulativeError, pitch_correction,integral_term; 
 
-float lower_pwm_constrain = 60;
-float higher_pwm_constrain = 90;
+
+
+// float lower_pwm_constrain = MIN_PWM;
+// float higher_pwm_constrain = MAX_PWM;
 float left_pwm = 0, right_pwm = 0;
 
 float absolute_pitch_correction = 0;
@@ -436,11 +457,15 @@ void calculate_pitch_error()
     {
         pitchCumulativeError = 0;
     }  
-    if(pitchCumulativeError>4000)
-        pitchCumulativeError = 4000;
-    else if(pitchCumulativeError<-4000)
-        pitchCumulativeError = -4000;
-    pitch_correction = pitchKp * pitch_error + pitchKi * pitchCumulativeError - pitchKd * pitchDifference;
+
+    integral_term = pitchCumulativeError*pitchKi;   
+
+    if(integral_term>MAX_INTEGRAL_ERROR)
+        integral_term = MAX_INTEGRAL_ERROR;
+    else if(integral_term<-MAX_INTEGRAL_ERROR)
+        integral_term= -MAX_INTEGRAL_ERROR;
+    
+    pitch_correction = pitchKp * pitch_error + integral_term - pitchKd * pitchDifference;
     prevpitch_error = pitch_error;
 }
 
@@ -455,9 +480,9 @@ void print_info()
     // printf("PITCH CORRECTION %f\n",pitch_correction );
     // printf("Absolute Pitch Correction: %f\t",absolute_pitch_correction);
     // printf("Yaw Correction: %f\n", yaw_correction);
-    // printf("LEFT PWM: %f\t",left_pwm);
-    // printf("RIGHT PWM: %f\n",right_pwm);
-    printf("Pitch pitchCumulativeError%f\n", pitchCumulativeError*pitchKi);
+    printf("LEFT PWM: %f\t",left_pwm);
+    printf("RIGHT PWM: %f\n",right_pwm);
+    // printf("Pitch pitchCumulativeError%f \n", integral_term);
     printf("\n");
 }
 
@@ -524,7 +549,7 @@ void app_main()
             ret = mpu6050_read_acce(I2C_MASTER_NUM, acce_rd, BUFF_SIZE);
             shift_buf(acce_rd, acce_raw_value, BUFF_SIZE/2);
 
-            //Get pitch angle using compimentor filter
+            //Get pitch angle using complimentary filter
             complimentory_filter(acce_raw_value, gyro_raw_value, complimentary_angle, BUFF_SIZE/2);
 
             pitch_angle = complimentary_angle[1];
@@ -537,7 +562,7 @@ void app_main()
             calculate_yaw_error();
             calculate_yaw_correction();
             absolute_pitch_correction = absolute(pitch_correction);
-            absolute_pitch_correction = constrain(absolute_pitch_correction,0,100);
+            absolute_pitch_correction = constrain(absolute_pitch_correction,0,MAX_PITCH_CORRECTION);
 
             
             //if bot is not balance, balance it at 190. Once it is balanced shift the the set-point ahead 
@@ -565,8 +590,8 @@ void app_main()
 
                 // left_pwm = constrain(absolute_pitch_correction - yaw_correction, lower_pwm_constrain, higher_pwm_constrain);
                 // right_pwm = constrain(absolute_pitch_correction + yaw_correction, lower_pwm_constrain, higher_pwm_constrain);
-                left_pwm = constrain((absolute_pitch_correction), lower_pwm_constrain, higher_pwm_constrain);
-                right_pwm = constrain((absolute_pitch_correction), lower_pwm_constrain, higher_pwm_constrain);            
+                left_pwm = constrain((absolute_pitch_correction), MIN_PWM, MAX_PWM);
+                right_pwm = constrain((absolute_pitch_correction), MIN_PWM, MAX_PWM);            
             }
             else
             {
@@ -592,8 +617,8 @@ void app_main()
                     printf("%s\n","out of forward angle range");
                 }
 
-                left_pwm = constrain((absolute_pitch_correction - yaw_correction), lower_pwm_constrain, higher_pwm_constrain);
-                right_pwm = constrain((absolute_pitch_correction + yaw_correction), lower_pwm_constrain, higher_pwm_constrain);
+                left_pwm = constrain((absolute_pitch_correction - yaw_correction), MIN_PWM, MAX_PWM);
+                right_pwm = constrain((absolute_pitch_correction + yaw_correction), MIN_PWM, MAX_PWM);
                 // left_pwm = constrain((absolute_pitch_correction), lower_pwm_constrain, higher_pwm_constrain);
                 // right_pwm = constrain((absolute_pitch_correction), lower_pwm_constrain, higher_pwm_constrain);
             }
