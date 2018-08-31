@@ -70,9 +70,27 @@
 /*
  * Line Following PID Constants
  */
-float yaw_kP =1;
-float yaw_kI =0;
-float yaw_kD =0;
+#define yaw_kP 1
+#define yaw_kI 0
+#define yaw_kD 0
+
+#define MAX_YAW_CORRECTION 20
+/*
+* Self Balancing PID constants
+*/
+#define pitchKp  5.85
+#define pitchKi  0.035          
+#define pitchKd  2.8
+
+#define MAX_PITCH_CORRECTION 100 
+#define MAX_INTEGRAL_ERROR 80
+
+#define MAX_PWM 100  
+#define MIN_PWM 65
+
+float setpoint = -1.5;
+float initial_angle = 0;
+float forward_angle = 0; 
 
 int state = 0; 
 const static char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
@@ -104,15 +122,8 @@ float sensor_value[4];
 
 float acce_angle[2];
 
-float setpoint = 180; 
 float pitch_angle = 0, pitch_error, prevpitch_error, pitchDifference, pitchCumulativeError, pitch_correction; 
 
-float pitchKp = 3.0;
-float pitchKi = 0;
-float pitchKd = 0;
-
-float lower_pwm_constrain = 60;
-float higher_pwm_constrain = 80;
 float left_pwm = 0, right_pwm = 0;
 
 float absolute_pitch_correction = 0;
@@ -373,7 +384,7 @@ esp_err_t mpu6050_read_acce(i2c_port_t i2c_num, uint8_t* data_rd, size_t size)
     i2c_master_read_byte(cmd, data_rd + size - 1, NACK_VAL);
     i2c_master_stop(cmd);
     esp_err_t ret = i2c_master_cmd_begin(i2c_num, cmd, 1000 / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
+    i2c_cmd_link_delete(cmd);   
     return ret;
 }
 
@@ -578,12 +589,38 @@ void calculate_pitch_error()
 void lineFollowTask()
 {
   printf("%s\n","Task Entered" );
-  i2c_master_init();
+      //Initialize I2C 
+    i2c_master_init();
+    setpoint = initial_angle;
+
+    //adc testing
+    while(0)
+    {
+
+        read_sensors();
+        calc_sensor_values();
+
+    }
+
+    // Motor Testing 
+    while(0)
+    {
+        mcpwm_gpio_initialize();
+        mcpwm_initialize();
+        // for(long int i=0;i< 100000;i++)
+        // {
+        //     bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, 90, 90);
+        // }
+        // for(long int i=0;i< 100000;i++)
+        // {
+        //     bot_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, 90, 90);
+        // }
+
+    }
 
     // Main code 
     while(1)
     {
-        
         int ret;
         uint8_t* acce_rd = (uint8_t*) malloc(BUFF_SIZE);
         uint8_t* gyro_rd = (uint8_t*) malloc(BUFF_SIZE);
@@ -593,32 +630,30 @@ void lineFollowTask()
         ret = mpu6050_init(I2C_MASTER_NUM);
         while(ret != ESP_OK) 
         {
-            printf("INIT FAILED... Retry\n");
+            // printf("INIT FAILED... Retry\n");
             vTaskDelay(100/ portTICK_RATE_MS);
             ret = mpu6050_init(I2C_MASTER_NUM);
         }
-        printf("INIT SUCESS...\n");
+        // printf("INIT SUCESS...\n");
         vTaskDelay(100/ portTICK_RATE_MS);
         mcpwm_gpio_initialize();
         mcpwm_initialize();
         while (1) 
         {
             /*Read raw gyro values*/
-            printf("Kp:%f\t", pitchKp );
-            printf("Kd:%f\t", pitchKd );
-            printf("Ki:%f\n", pitchKi );
             ret = mpu6050_read_gyro(I2C_MASTER_NUM, gyro_rd, BUFF_SIZE);
             shift_buf(gyro_rd, gyro_raw_value, BUFF_SIZE/2);
 
 
-            // Read raw acce values
+            /*Read raw acce values*/
             ret = mpu6050_read_acce(I2C_MASTER_NUM, acce_rd, BUFF_SIZE);
             shift_buf(acce_rd, acce_raw_value, BUFF_SIZE/2);
 
-            //Get pitch angle using compimentor filter
+            //Get pitch angle using complimentary filter
             complimentory_filter(acce_raw_value, gyro_raw_value, complimentary_angle, BUFF_SIZE/2);
 
             pitch_angle = complimentary_angle[1];
+
 
             //Calulate PITCH and YAW error
             calculate_pitch_error();
@@ -626,42 +661,47 @@ void lineFollowTask()
             calc_sensor_values();
             calculate_yaw_error();
             calculate_yaw_correction();
-            absolute_pitch_correction = abs(pitch_correction);
-            absolute_pitch_correction = constrain(absolute_pitch_correction,0,75);
+            absolute_pitch_correction = absolute(pitch_correction);
+            absolute_pitch_correction = constrain(absolute_pitch_correction,0,MAX_PITCH_CORRECTION);
+
             
-            //if bot is not balance, balance it at 180. Once it is balanced shift the the set-point ahead 
+            //if bot is not balance, balance it at 190. Once it is balanced shift the the set-point ahead 
 
             if(!balanced)
             {
                 // printf("%s\n","Not balanced : ");
-                if (pitch_error > 2.5)
-                {
-                    bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
-
-                }
-
-                else if (pitch_error < -2.5)
+                if (pitch_error > 0)
                 {
                     bot_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
+
                 }
-                else
-                { 
-                    brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
-                    setpoint = 165;
-                    balanced = true;
+
+                else if (pitch_error < 0)
+                {
+                    bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
                 }
-                left_pwm = constrain(absolute_pitch_correction - yaw_correction, lower_pwm_constrain, higher_pwm_constrain);
-                right_pwm = constrain(absolute_pitch_correction + yaw_correction, lower_pwm_constrain, higher_pwm_constrain);
+                // else
+                // { 
+                //     brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
+                //     pitchCumulativeError = 0;
+                //     // setpoint = forward_angle;
+                //     // balanced = true;
+                // }
+
+                // left_pwm = constrain(absolute_pitch_correction - yaw_correction, lower_pwm_constrain, higher_pwm_constrain);
+                // right_pwm = constrain(absolute_pitch_correction + yaw_correction, lower_pwm_constrain, higher_pwm_constrain);
+                left_pwm = constrain((absolute_pitch_correction), MIN_PWM, MAX_PWM);
+                right_pwm = constrain((absolute_pitch_correction), MIN_PWM, MAX_PWM);            
             }
             else
             {
-                // printf("%s\n","Perfectly balanced, as all things should be");
-                if (pitch_error > 1)
+                printf("%s\n","Perfectly balanced, as all things should be");
+                if (pitch_error > 2)
                 {
                     bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
                 }
 
-                else if (pitch_error < -1)
+                else if (pitch_error < -2)
                 {
                     bot_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
                 }
@@ -670,21 +710,25 @@ void lineFollowTask()
                     brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
                 }
 
-                if(pitch_error>2.5 || pitch_error < -10)
+                if(pitch_error>2.5 || pitch_error < -5)
                 {
-                    setpoint = 180;
+                    setpoint = initial_angle;
                     balanced = false;
-                    // printf("%s\n","out of forward angle range");
+                    printf("%s\n","out of forward angle range");
                 }
 
-                left_pwm = constrain((absolute_pitch_correction - yaw_correction), lower_pwm_constrain, higher_pwm_constrain);
-                right_pwm = constrain((absolute_pitch_correction + yaw_correction), lower_pwm_constrain, higher_pwm_constrain);
+                left_pwm = constrain((absolute_pitch_correction - yaw_correction), MIN_PWM, MAX_PWM);
+                right_pwm = constrain((absolute_pitch_correction + yaw_correction), MIN_PWM, MAX_PWM);
+                // left_pwm = constrain((absolute_pitch_correction), lower_pwm_constrain, higher_pwm_constrain);
+                // right_pwm = constrain((absolute_pitch_correction), lower_pwm_constrain, higher_pwm_constrain);
             }
+            
+            print_info();
         }
 
     }
   
-  }
+}
 
 
 void wifiInit()

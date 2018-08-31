@@ -1,0 +1,469 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"hi",
+				"higher_rangeRed"
+			],
+			[
+				"lower_ra",
+				"lower_rangeRed"
+			],
+			[
+				"for",
+				"forward_pitchKp"
+			],
+			[
+				"pitch",
+				"pitchKp"
+			],
+			[
+				"MAX",
+				"MAX_INTEGRAL_ERROR"
+			],
+			[
+				"in",
+				"integral_term"
+			],
+			[
+				"prev",
+				"prevpitch_error"
+			],
+			[
+				"pitchK",
+				"pitchKi"
+			],
+			[
+				"cumu",
+				"pitchCumulativeError"
+			],
+			[
+				"absolute_p",
+				"absolute_pitch_angle"
+			],
+			[
+				"sens",
+				"sensor_max_array"
+			],
+			[
+				"sen",
+				"sensor_min_array"
+			],
+			[
+				"adc",
+				"adc_reading"
+			],
+			[
+				"pa",
+				"packet_protocol"
+			],
+			[
+				"s",
+				"struct\tstruct"
+			],
+			[
+				"std",
+				"stdio.h\tstandard header"
+			],
+			[
+				"total",
+				"total_students"
+			],
+			[
+				"t",
+				"total_ingredients"
+			],
+			[
+				"to",
+				"total_students"
+			],
+			[
+				"tot",
+				"total_students"
+			],
+			[
+				"days",
+				"days"
+			],
+			[
+				"da",
+				"days"
+			],
+			[
+				"te",
+				"test_cases_original"
+			],
+			[
+				"day",
+				"day_number"
+			],
+			[
+				"num_",
+				"number_of_tasks_in_a_day_array"
+			],
+			[
+				"n",
+				"number_of_tasks_in_a_day_array"
+			],
+			[
+				"task",
+				"tasks_to_complete_array"
+			],
+			[
+				"nu",
+				"number_of_tasks_in_a_day"
+			],
+			[
+				"num",
+				"number_of_tasks_in_a_day"
+			],
+			[
+				"tasks",
+				"tasks_to_complete"
+			],
+			[
+				"ts",
+				"tasks_to_complete"
+			],
+			[
+				"victim",
+				"victimIP"
+			],
+			[
+				"vict",
+				"victimIP"
+			],
+			[
+				"gy",
+				"gyro_angle"
+			],
+			[
+				"abs",
+				"absolute_pitch_angle"
+			],
+			[
+				"compl",
+				"complimentary_angle"
+			],
+			[
+				"init",
+				"initial"
+			],
+			[
+				"ini",
+				"initial"
+			],
+			[
+				"com",
+				"complimentary_angle"
+			],
+			[
+				"MC",
+				"MCPWM_TIMER_0"
+			],
+			[
+				"brus",
+				"brushed_motor_forward"
+			],
+			[
+				"new",
+				"new_node"
+			],
+			[
+				"str",
+				"binary_search_tree"
+			],
+			[
+				"con",
+				"continue"
+			],
+			[
+				"vic",
+				"victimIP"
+			],
+			[
+				"get",
+				"get_MAC"
+			],
+			[
+				"y_",
+				"y_train"
+			],
+			[
+				"link",
+				"link_length_2"
+			],
+			[
+				"theta3",
+				"theta3"
+			],
+			[
+				"c",
+				"compute_Angles"
+			],
+			[
+				"a",
+				"angle1"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				]
+			],
+			[
+				"Packages/C++/C++ Single File.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Makefile/Make.sublime-build",
+					""
+				],
+				[
+					"Packages/Makefile/Make.sublime-build",
+					"Clean"
+				]
+			],
+			[
+				"Packages/Makefile/Make.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				]
+			],
+			[
+				"Packages/Python/Python.sublime-build",
+				""
+			]
+		]
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/Users/saaketAgashe/esp/Wall-E-Workshop-2.1/self_balancing_with_line_following_with_floats/main/self_balancing_line_following.c",
+		"/Users/saaketAgashe/esp/mpu6050/mpu6050_raw/main/mpu6050_raw.c",
+		"/Users/saaketAgashe/esp/line_following/main/line_following.c",
+		"/Users/saaketAgashe/change_diff_relay.filter",
+		"/Users/saaketAgashe/Documents/Hacking/mitsu1/data_injection_start.py",
+		"/Users/saaketAgashe/esp/self_balancing/main/self_balancing.c",
+		"/Users/saaketAgashe/esp/self_balancing_line_following/main/self_balancing_line_following.c",
+		"/Users/saaketAgashe/dnp3.filter",
+		"/Users/saaketAgashe/packet_sniffer.py",
+		"/Users/saaketAgashe/Documents/C-Programming/binary_tree.c",
+		"/Users/saaketAgashe/Documents/C-Programming/k_largest.c",
+		"/Users/saaketAgashe/Documents/C-Programming/medium_binary_tree.c",
+		"/Users/saaketAgashe/Documents/Hacking/IDS/Man in the Middle attack_",
+		"/Users/saaketAgashe/TASM/hello_world.asm",
+		"/Users/saaketAgashe/esp/adc_pwm/main/adc_pwm.c",
+		"/Users/saaketAgashe/esp/experiments_1/main/experiments1.c",
+		"/Users/saaketAgashe/esp/pwm_testing/main/pwm_testing.c",
+		"/Users/saaketAgashe/esp/esp-idf/examples/peripherals/adc/main/adc1_example_main.c",
+		"/Users/saaketAgashe/Documents/C-Programming/basics/Debug/hello_world.d",
+		"/Users/saaketAgashe/esp/switch_testing/main/adc_testing.c",
+		"/Users/saaketAgashe/esp/pwm_testing/main/hello_world_main.c",
+		"/Users/saaketAgashe/Documents/workshop2018/esp-codes/line_following/main/line_following.c",
+		"/Users/saaketAgashe/Documents/workshop2018/esp-codes/esp32rtos/main/esp32rtos.c",
+		"/Users/saaketAgashe/Documents/workshop2018/esp-codes/pwm_test/main/esp32rtos.c",
+		"/Volumes/My Passport/SRA/Self Balancing/__08_05ChangedLibraries/MPU/MPU.h",
+		"/Users/saaketAgashe/Documents/Python/number_game.py",
+		"/Users/saaketAgashe/Documents/Python/string_reverse.py",
+		"/Users/saaketAgashe/esp/mpu6050/mpu6050_comp_filter/main/mpu6050_comp_filter.c",
+		"/Users/saaketAgashe/Documents/workshop2018/mpu6050/main/mpu6050_raw.c",
+		"/Users/saaketAgashe/Desktop/names.txt",
+		"/Users/saaketAgashe/Desktop/findTheSize.py",
+		"/Volumes/My Passport/SRA/Self Balancing/__08_05ChangedLibraries/MPU/MPU.cpp",
+		"/Users/saaketAgashe/Documents/Hacking/mtm_attack.py",
+		"/Users/saaketAgashe/Documents/Hacking/invitecodetrial.js",
+		"/Users/saaketAgashe/Documents/Arduino/libraries/SRA16/SRA16.h",
+		"/Users/saaketAgashe/Documents/Hacking/nmap scanner",
+		"/Users/saaketAgashe/Desktop/emotion_detection.py",
+		"/Users/saaketAgashe/Documents/Machine Learning/face_recognition_experiments/ojasee_classifier.py",
+		"/Users/saaketAgashe/Desktop/getFace.py",
+		"/Users/saaketAgashe/Desktop/Eklavya2018/dlibtest.py",
+		"/Users/saaketAgashe/Documents/Machine Learning/KNN/breast_cancer_data.data.txt",
+		"/Users/saaketAgashe/Documents/Machine Learning/KNN/knn_breast_cancer_detection.py",
+		"/Users/saaketAgashe/Documents/Machine Learning/KNN/knn_breast_cancer_detection_from_scratch.py",
+		"/Users/saaketAgashe/Desktop/opencv-face-recognition-python/OpenCV-Face-Recognition-Python.py",
+		"/Users/saaketAgashe/Desktop/ROS Workshop/Workshop Final Codes/angle_publisher_forward_kinematics.py",
+		"/Users/saaketAgashe/Documents/Python/InverseKinematics.py",
+		"/Users/saaketAgashe/Documents/Python/matrixMultiplier.py",
+		"/Users/saaketAgashe/Desktop/ROS Workshop/MatrixMultiplication.py",
+		"/Users/saaketAgashe/Desktop/ROS Workshop/angle_publisher.py"
+	],
+	"find":
+	{
+		"height": 26.0
+	},
+	"find_in_files":
+	{
+		"height": 101.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": false
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 26.0
+	},
+	"input":
+	{
+		"height": 39.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 31.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "Packages/Python/Python.sublime-build",
+	"project": "final_with_pid_tuning.sublime-project",
+	"replace":
+	{
+		"height": 48.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 392.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 592.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 414.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
