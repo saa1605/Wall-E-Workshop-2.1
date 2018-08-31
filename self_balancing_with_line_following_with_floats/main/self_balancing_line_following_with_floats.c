@@ -29,7 +29,7 @@
 #define GPIO_NUM2 16
 #define GPIO_NUM3 17
 
-#define ALPHA 0.9
+#define ALPHA 0.99
 #define RAD_TO_DEG 57.27272727
 
 #define BUFF_SIZE 6
@@ -74,15 +74,15 @@ int sensor_max_array[] = {2694,1778,1778,1860};
 #define pitchKi  0.035          
 #define pitchKd  2.8
 
-#define MAX_PITCH_CORRECTION 100 
-#define MAX_INTEGRAL_ERROR 80
+#define MAX_PITCH_CORRECTION 90 
+#define MAX_INTEGRAL_ERROR 75
 
 #define MAX_PWM 100  
 #define MIN_PWM 65
 
-float setpoint = -2.5;
-float initial_angle = 0;
-float forward_angle = 0; 
+float setpoint = 0;
+float initial_angle = -1.5;
+float forward_angle = 2.5; 
 
 
 ///////
@@ -486,39 +486,10 @@ void print_info()
     printf("\n");
 }
 
-void app_main()
+void balance_task(void *arg)
 {
-
-    //Initialize I2C 
     i2c_master_init();
     setpoint = initial_angle;
-
-    //adc testing
-    while(0)
-    {
-
-        read_sensors();
-        calc_sensor_values();
-
-    }
-
-    // Motor Testing 
-    while(0)
-    {
-        mcpwm_gpio_initialize();
-        mcpwm_initialize();
-        // for(long int i=0;i< 100000;i++)
-        // {
-        //     bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, 90, 90);
-        // }
-        // for(long int i=0;i< 100000;i++)
-        // {
-        //     bot_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, 90, 90);
-        // }
-
-    }
-
-    // Main code 
     while(1)
     {
         int ret;
@@ -530,7 +501,7 @@ void app_main()
         ret = mpu6050_init(I2C_MASTER_NUM);
         while(ret != ESP_OK) 
         {
-            // printf("INIT FAILED... Retry\n");
+            printf("INIT FAILED... Retry\n");
             vTaskDelay(100/ portTICK_RATE_MS);
             ret = mpu6050_init(I2C_MASTER_NUM);
         }
@@ -626,6 +597,153 @@ void app_main()
         }
 
     }
+    while(0)
+    {
+        printf("%s\n","in" );
+    }
+    
+}
+
+void app_main()
+{
+
+    //Initialize I2C 
+
+    xTaskCreate(balance_task,"balance task",100000,NULL,1,NULL);
+
+    //adc testing
+    // while(0)
+    // {
+
+    //     read_sensors();
+    //     calc_sensor_values();
+
+    // }
+
+    // // Motor Testing 
+    // while(0)
+    // {
+    //     mcpwm_gpio_initialize();
+    //     mcpwm_initialize();
+    //     // for(long int i=0;i< 100000;i++)
+    //     // {
+    //     //     bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, 90, 90);
+    //     // }
+    //     // for(long int i=0;i< 100000;i++)
+    //     // {
+    //     //     bot_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, 90, 90);
+    //     // }
+
+    // }
+
+    // Main code 
+    // while(1)
+    // {
+    //     int ret;
+    //     uint8_t* acce_rd = (uint8_t*) malloc(BUFF_SIZE);
+    //     uint8_t* gyro_rd = (uint8_t*) malloc(BUFF_SIZE);
+    //     int16_t* acce_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
+    //     int16_t* gyro_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
+    //     float complimentary_angle[2] = {0, 0};
+    //     ret = mpu6050_init(I2C_MASTER_NUM);
+    //     while(ret != ESP_OK) 
+    //     {
+    //         // printf("INIT FAILED... Retry\n");
+    //         vTaskDelay(100/ portTICK_RATE_MS);
+    //         ret = mpu6050_init(I2C_MASTER_NUM);
+    //     }
+    //     // printf("INIT SUCESS...\n");
+    //     vTaskDelay(100/ portTICK_RATE_MS);
+    //     mcpwm_gpio_initialize();
+    //     mcpwm_initialize();
+    //     while (1) 
+    //     {
+    //         /*Read raw gyro values*/
+    //         ret = mpu6050_read_gyro(I2C_MASTER_NUM, gyro_rd, BUFF_SIZE);
+    //         shift_buf(gyro_rd, gyro_raw_value, BUFF_SIZE/2);
+
+
+    //         /*Read raw acce values*/
+    //         ret = mpu6050_read_acce(I2C_MASTER_NUM, acce_rd, BUFF_SIZE);
+    //         shift_buf(acce_rd, acce_raw_value, BUFF_SIZE/2);
+
+    //         //Get pitch angle using complimentary filter
+    //         complimentory_filter(acce_raw_value, gyro_raw_value, complimentary_angle, BUFF_SIZE/2);
+
+    //         pitch_angle = complimentary_angle[1];
+
+
+    //         //Calulate PITCH and YAW error
+    //         calculate_pitch_error();
+    //         read_sensors();
+    //         calc_sensor_values();
+    //         calculate_yaw_error();
+    //         calculate_yaw_correction();
+    //         absolute_pitch_correction = absolute(pitch_correction);
+    //         absolute_pitch_correction = constrain(absolute_pitch_correction,0,MAX_PITCH_CORRECTION);
+
+            
+    //         //if bot is not balance, balance it at 190. Once it is balanced shift the the set-point ahead 
+
+    //         if(!balanced)
+    //         {
+    //             // printf("%s\n","Not balanced : ");
+    //             if (pitch_error > 0)
+    //             {
+    //                 bot_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
+
+    //             }
+
+    //             else if (pitch_error < 0)
+    //             {
+    //                 bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
+    //             }
+    //             // else
+    //             // { 
+    //             //     brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
+    //             //     pitchCumulativeError = 0;
+    //             //     // setpoint = forward_angle;
+    //             //     // balanced = true;
+    //             // }
+
+    //             // left_pwm = constrain(absolute_pitch_correction - yaw_correction, lower_pwm_constrain, higher_pwm_constrain);
+    //             // right_pwm = constrain(absolute_pitch_correction + yaw_correction, lower_pwm_constrain, higher_pwm_constrain);
+    //             left_pwm = constrain((absolute_pitch_correction), MIN_PWM, MAX_PWM);
+    //             right_pwm = constrain((absolute_pitch_correction), MIN_PWM, MAX_PWM);            
+    //         }
+    //         else
+    //         {
+    //             printf("%s\n","Perfectly balanced, as all things should be");
+    //             if (pitch_error > 2)
+    //             {
+    //                 bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
+    //             }
+
+    //             else if (pitch_error < -2)
+    //             {
+    //                 bot_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
+    //             }
+    //             else
+    //             { 
+    //                 brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
+    //             }
+
+    //             if(pitch_error>2.5 || pitch_error < -5)
+    //             {
+    //                 setpoint = initial_angle;
+    //                 balanced = false;
+    //                 printf("%s\n","out of forward angle range");
+    //             }
+
+    //             left_pwm = constrain((absolute_pitch_correction - yaw_correction), MIN_PWM, MAX_PWM);
+    //             right_pwm = constrain((absolute_pitch_correction + yaw_correction), MIN_PWM, MAX_PWM);
+    //             // left_pwm = constrain((absolute_pitch_correction), lower_pwm_constrain, higher_pwm_constrain);
+    //             // right_pwm = constrain((absolute_pitch_correction), lower_pwm_constrain, higher_pwm_constrain);
+    //         }
+    //         print_info();
+    //     }
+
+    // }
     
 }
 
