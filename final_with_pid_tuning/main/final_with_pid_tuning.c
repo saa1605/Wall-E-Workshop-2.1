@@ -546,7 +546,7 @@ static void calculate_yaw_error()
 static void calculate_yaw_correction()
 {
     yaw_error *= 0.01;
-    yaw_difference = yaw_error - yaw_prev_error;
+    yaw_difference = absolute(yaw_error - yaw_prev_error);
     yaw_cumulative_error += yaw_error;
     
     if(yaw_cumulative_error > 30)
@@ -576,7 +576,7 @@ void calculate_pitch_error()
         absolute_pitch_angle=pitch_angle;
 
     pitch_error = setpoint-absolute_pitch_angle;   
-    pitchDifference = pitch_error - prevpitch_error;
+    pitchDifference = absolute(pitch_error - prevpitch_error);
     pitchCumulativeError += pitch_error;
     if(pitchCumulativeError>40)
         pitchCumulativeError = 40;

@@ -20,7 +20,7 @@
 
 #define DEFAULT_VREF    1100        //Use adc2_vref_to_gpio() to obtain a better estimate
 
-adc1_channel_t channel[4] = {ADC_CHANNEL_0, ADC_CHANNEL_3, ADC_CHANNEL_6, ADC_CHANNEL_7};
+adc1_channel_t channel[4] = {ADC_CHANNEL_7, ADC_CHANNEL_6, ADC_CHANNEL_0, ADC_CHANNEL_3};
 static const adc_atten_t atten = ADC_ATTEN_11db;
 static const adc_unit_t unit = ADC_UNIT_1;
 
@@ -36,7 +36,7 @@ int weights[4] = {-3,-1,1,3};
 /*
  * Motor value constraints
  */
-float opt = 0;
+float opt = 60;
 float lower_pwm_constrain = 60;
 float higher_pwm_constrain = 80;
 float left_pwm = 0, right_pwm = 0;
@@ -150,7 +150,7 @@ static void calc_sensor_values()
 {
     for(int i = 0; i < 4; i++)
     {
-        sensor_value[i] = map(adc_reading[i], 1000, 2360, 1000, 0);
+        sensor_value[i] = map(adc_reading[i], 1700, 4000, 0, 1000);
         sensor_value[i] = constrain(sensor_value[i],0,1000);
         // if(sensor_value[i] < 0)
         //     sensor_value[i] = 0;
@@ -228,9 +228,10 @@ void app_main()
         calc_error();
         calc_correction();
         set_mcpwm(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
+        printf("%d\n", error);
         // printf("Left Pwm: %f\t",left_pwm );
         // printf("Right Pwm: %f\n",right_pwm );
-        printf("Error: %f\t",left_pwm );
-        printf("Error: %f\n",right_pwm );
+        // printf("Error: %f\t",left_pwm );
+        // printf("Error: %f\n",right_pwm );
     }
 }

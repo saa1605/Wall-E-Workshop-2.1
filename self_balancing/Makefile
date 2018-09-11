@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := mpu6050_comp_filter
+PROJECT_NAME := hello-world
 
 include $(IDF_PATH)/make/project.mk
 
