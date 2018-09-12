@@ -44,10 +44,10 @@ float left_pwm = 0, right_pwm = 0;
 /*
  * Line Following PID Variables
  */
-int error, prev_error, difference, cumulative_error, correction;
+float error, prev_error, difference, cumulative_error, correction;
 
 uint32_t adc_reading[4];
-int sensor_value[4];
+float sensor_value[4];
 
 
 
@@ -122,12 +122,12 @@ static void set_mcpwm(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float du
 //     mcpwm_set_signal_low(mcpwm_num, timer_num, MCPWM_OPR_B);
 // }
 
-static int map(uint32_t x, int min_in, int max_in, int min_out, int max_out)
+float map(float x, float min_in, float max_in, float min_out, float max_out)
 {
-    return ((int)x - min_in) * (max_out - min_out) / (max_in - min_in) + min_out;
+    return (x - min_in) * (max_out - min_out) / (max_in - min_in) + min_out;
 }
 
-static float constrain(float x, float lower_limit, float higher_limit)
+float constrain(float x, float lower_limit, float higher_limit)
 {
     if(x < lower_limit)
         x = lower_limit;
@@ -136,6 +136,16 @@ static float constrain(float x, float lower_limit, float higher_limit)
         x = higher_limit;
 
     return x;
+}
+
+float absolute(float number)
+{
+    if(number < 0)
+    {
+        return (-1)*number;
+    }
+
+    return number;
 }
 
 static void read_sensors()
@@ -184,7 +194,7 @@ static void calc_error()
 
     if(all_black_flag == 1)
     {
-        if(error < 0)
+        if(error > 0)
             pos = 3000;
         else
             pos = -3000;
@@ -209,7 +219,7 @@ static void calc_correction()
         cumulative_error = -30;
     }
     
-    correction = kP*error + kI*cumulative_error - kD*difference;
+    correction = kP*error + kI*cumulative_error + kD*difference;
     prev_error = error;
 
     left_pwm = constrain((opt + correction), lower_pwm_constrain, higher_pwm_constrain);

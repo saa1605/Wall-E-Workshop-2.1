@@ -124,7 +124,7 @@ static void calculate_yaw_error()
 static void calculate_yaw_correction()
 {
     yaw_error *= 0.1;
-    yaw_difference = absolute(yaw_error - yaw_prev_error);
+    yaw_difference = (yaw_error - yaw_prev_error);
     yaw_cumulative_error += yaw_error;
     
     if(yaw_cumulative_error > 30)
@@ -137,7 +137,7 @@ static void calculate_yaw_correction()
         yaw_cumulative_error = -30;
     }
     
-    yaw_correction = yaw_kP*yaw_error + yaw_kI*yaw_cumulative_error - yaw_kD*yaw_difference;
+    yaw_correction = yaw_kP*yaw_error + yaw_kI*yaw_cumulative_error + yaw_kD*yaw_difference;
     yaw_prev_error = yaw_error;
 }
 
@@ -145,7 +145,7 @@ static void calculate_yaw_correction()
 void calculate_pitch_error()
 {
     pitch_error = setpoint-pitch_angle; 
-    pitchDifference = absolute(pitch_error - prevpitch_error);
+    pitchDifference = (pitch_error - prevpitch_error);
     pitchCumulativeError += pitch_error;
     if(pitch_error*prevpitch_error < 0)
     {
@@ -159,7 +159,7 @@ void calculate_pitch_error()
     else if(integral_term<-MAX_INTEGRAL_ERROR)
         integral_term= -MAX_INTEGRAL_ERROR;
     
-    pitch_correction = pitchKp * pitch_error + integral_term - pitchKd * pitchDifference;
+    pitch_correction = pitchKp * pitch_error + integral_term + pitchKd * pitchDifference;
     prevpitch_error = pitch_error;
     absolute_pitch_correction = absolute(pitch_correction);
 }
