@@ -18,9 +18,9 @@
 //ALL VARIABLES BEYOND THIS 
 
 
-float yaw_kP= 3;
+float yaw_kP= 2;
 float yaw_kI= 0;
-float yaw_kD= 0.5;
+float yaw_kD= 0.75;
 
 float pitchKp=  5.85;       
 float pitchKi=  0.095;          
@@ -33,10 +33,10 @@ int MAX_PWM = 100;
 int MIN_PWM = 60;
 
 
-float setpoint = -1.5;
-float initial_acce_angle = -1.5;
-float forward_angle = 1; 
-float MAX_PITCH_ERROR = -3.5 ;
+float setpoint = 6.5;
+float initial_acce_angle = 6.5;
+float forward_angle = 7.5; 
+float MAX_PITCH_ERROR = -2 ;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////// 
@@ -100,7 +100,7 @@ static void calculate_yaw_error()
             all_black_flag = 0;
         }
 
-        weighted_sum += (float)(sensor_value[i]) * (weights[i] * 1000);
+        weighted_sum += (float)(sensor_value[i]) * (weights[i]);
         sum += sensor_value[i];
         
     }
@@ -124,7 +124,7 @@ static void calculate_yaw_error()
 
 static void calculate_yaw_correction()
 {
-    yaw_error *= 0.01;
+    yaw_error *= 10;
     yaw_difference = (yaw_error - yaw_prev_error);
     yaw_cumulative_error += yaw_error;
     
@@ -147,6 +147,7 @@ void calculate_pitch_error()
     pitch_error = pitch_angle; 
     pitchDifference = (pitch_error - prevpitch_error);
     pitchCumulativeError += pitch_error;
+
     if(pitch_error*prevpitch_error < 0)
     {
         pitchCumulativeError = 0;
@@ -170,15 +171,15 @@ void print_info()
 {        
     
     // printf("ROLL ANGLE: %f\n", complimentary_angle[0]);
-    // printf("PITCH ANGLE:%f\t",pitch_angle);
+    printf("PITCH ANGLE:%f\t",pitch_angle);
     // printf("PITCH ERROR%f\t",pitch_error);
     // printf("YAW ERROR: %f\t",yaw_error);
     // printf("YAW CORRECTION: %f\t",yaw_correction);  
     // printf("PITCH CORRECTION %f\n",pitch_correction);
     // printf("ABSOLUTE PITCH CORRECTION: %f\t",absolute_pitch_correction);
     // printf("YAW CORRECTION: %f\t", yaw_correction);
-    printf("LEFT PWM: %f\t",left_pwm);
-    printf("RIGHT PWM: %f\n",right_pwm);
+    // printf("LEFT PWM: %f\t",left_pwm);
+    // printf("RIGHT PWM: %f\n",right_pwm);
 
     printf("\n");
 }
@@ -187,116 +188,102 @@ void balance_task(void *arg)
 {
     i2c_master_init();
     initial_acce_angle = setpoint;
-    while(1)
+
+    uint8_t* acce_rd = (uint8_t*) malloc(BUFF_SIZE);
+    uint8_t* gyro_rd = (uint8_t*) malloc(BUFF_SIZE);
+    int16_t* acce_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
+    int16_t* gyro_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
+
+
+    start_mpu();
+    
+    vTaskDelay(100/ portTICK_RATE_MS);
+    
+    //INIT PWM
+    mcpwm_initialize();
+
+    //SELF BALANCING AND LINE FOLLOWING
+    while (1) 
     {
-        uint8_t* acce_rd = (uint8_t*) malloc(BUFF_SIZE);
-        uint8_t* gyro_rd = (uint8_t*) malloc(BUFF_SIZE);
-        int16_t* acce_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
-        int16_t* gyro_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
+        calculate_pitch_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle);
+
+        //complimentary_angle[1] corresponds to the pitch angle
+        pitch_angle = complimentary_angle[1];
 
 
-        start_mpu();
-        
-        vTaskDelay(100/ portTICK_RATE_MS);
-        
-        //INIT PWM
-        mcpwm_initialize();
+        //Calulate PITCH and YAW error
+        calculate_pitch_error();
+        read_sensors();
+        calc_sensor_values();
+        calculate_yaw_error();
+        calculate_yaw_correction();
 
-        //SELF BALANCING AND LINE FOLLOWING
-        while (1) 
+        if(pitch_error>0)
         {
-            calculate_pitch_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle);
-
-            //complimentary_angle[1] corresponds to the pitch angle
-            pitch_angle = complimentary_angle[1];
-
-
-            //Calulate PITCH and YAW error
-            calculate_pitch_error();
-            read_sensors();
-            calc_sensor_values();
-            calculate_yaw_error();
-            calculate_yaw_correction();
-
-            if(!balanced)
-            {
-                left_pwm = constrain((absolute_pitch_correction ), MIN_PWM, MAX_PWM);
-                right_pwm = constrain((absolute_pitch_correction), MIN_PWM, MAX_PWM);
-
-                if (pitch_error > 1)
-                {
-                    bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
-                }
-
-                else if (pitch_error < -1)
-                {                     
-                    bot_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
-                }
-                else
-                { 
-                    bot_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
-                    initial_acce_angle = forward_angle;
-                    balanced = true;
-                }
-                // forward_count = 0;
-            }
-
-            else
-            {
-                // printf("%s\n","Perfectly balanced, as all things should be");
-
-                //CHECK DIRECTION OF BOT MOTION FOR ADDING OR SUBTRACTING YAW CORRECTION
-                if(pitch_error>0)
-                {
-                    is_forward = 1;
-                }
-                else
-                {
-                    is_forward = -1;
-                }
-                left_pwm = constrain((absolute_pitch_correction +50 + is_forward*yaw_correction), MIN_PWM, MAX_PWM);
-                right_pwm = constrain((absolute_pitch_correction +50 - is_forward*yaw_correction), MIN_PWM, MAX_PWM);
-
-                // FOR SHARP TURNS
-                // if(yaw_error > 18)
-                // {
-                //     left_pwm = left_pwm + is_forward*8;
-                //     right_pwm = right_pwm - is_forward*8;
-                // }
-                // else if(yaw_error < -18)
-                // {
-                //     left_pwm = left_pwm - is_forward*8;
-                //     right_pwm = right_pwm + is_forward*8;
-                // }
-
-                // SET DIRECTION OF BOT FOR BALANCING
-                if (pitch_error > 0)
-                {   
-                    bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
-                }
-
-                else if (pitch_error < 0)
-                {
-                    bot_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);      
-                }
-                else
-                { 
-                    bot_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
-                }
-
-                //FORWARD COUNT TO BRING THE BOT OUT OF BALANCED CONDITION
-                if(pitch_error>1 || pitch_error < MAX_PITCH_ERROR)
-                {
-                    initial_acce_angle = setpoint;
-                    balanced = false;
-
-                }
-                // forward_count++;
-            }
-            print_info();
+            is_forward = 1;
+        }
+        else
+        {
+            is_forward = -1;
         }
 
-    }    
+        left_pwm = constrain((absolute_pitch_correction +50 + is_forward*yaw_correction), MIN_PWM, MAX_PWM);
+        right_pwm = constrain((absolute_pitch_correction +50 - is_forward*yaw_correction), MIN_PWM, MAX_PWM);
+
+
+        if(!balanced)
+        {
+            if (pitch_error > 1)
+            {
+                bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
+            }
+
+            else if (pitch_error < -1)
+            {                     
+                bot_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
+            }
+            else
+            { 
+                bot_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
+                initial_acce_angle = forward_angle;
+                balanced = true;
+            }
+        }
+
+        else
+        {
+
+            //CHECK DIRECTION OF BOT MOTION FOR ADDING OR SUBTRACTING YAW CORRECTION
+
+
+            // SET DIRECTION OF BOT FOR BALANCING
+            if (pitch_error > 0)
+            {   
+                bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
+            }
+
+            else if (pitch_error < 0)
+            {
+                bot_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);      
+            }
+            else
+            { 
+                bot_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
+            }
+
+            //FORWARD COUNT TO BRING THE BOT OUT OF BALANCED CONDITION
+            if(pitch_error>1 || pitch_error < MAX_PITCH_ERROR)
+            {
+                initial_acce_angle = setpoint;
+                balanced = false;
+
+            }
+
+        }
+        print_info();
+    }
+
+       
 }
 
 void app_main()

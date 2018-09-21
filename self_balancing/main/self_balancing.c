@@ -49,15 +49,15 @@ float pitchKi=  0.095;
 float pitchKd=  2.8;
 
 int MAX_PITCH_CORRECTION =100;
-int MAX_INTEGRAL_ERROR= 100;
+int MAX_INTEGRAL_ERROR= 90;
 
 int MAX_PWM = 100; 
 int MIN_PWM = 60;
 
 bool extreme_flag = true;
 
-float setpoint = -2;
-float initial_acce_angle = -2;
+float setpoint = 8;
+float initial_acce_angle = 8;
 float forward_angle = -4.5; 
 
 char pKp[10];
@@ -413,6 +413,8 @@ void calculate_pitch_error()
     pitch_error = pitch_angle; 
     pitchDifference = (pitch_error - prevpitch_error);
     pitchCumulativeError += pitch_error;
+
+    //RESET CUMULATIVE ERROR EVERYTIME BOT CROSSES THE ORIGIN
     if(pitch_error*prevpitch_error < 0)
     {
         pitchCumulativeError = 0;
@@ -436,15 +438,15 @@ void print_info()
 {        
     
     // printf("ROLL ANGLE: %f\n", complimentary_angle[0]);
-    // printf("PITCH ANGLE:%f\t",pitch_angle);
+    printf("PITCH ANGLE:%f\t",pitch_angle);
     // printf("PITCH ERROR%f\t",pitch_error);
     // printf("YAW ERROR: %f\t",yaw_error);
     // printf("YAW CORRECTION: %f\t",yaw_correction);  
     // printf("PITCH CORRECTION %f\n",pitch_correction);
     // printf("ABSOLUTE PITCH CORRECTION: %f\t",absolute_pitch_correction);
     // printf("YAW CORRECTION: %f\t", yaw_correction);
-    printf("LEFT PWM: %f\t",left_pwm);
-    printf("RIGHT PWM: %f\n",right_pwm);
+    // printf("LEFT PWM: %f\t",left_pwm);
+    // printf("RIGHT PWM: %f\n",right_pwm);
 
     printf("\n");
 }
@@ -471,81 +473,69 @@ void balance_task(void *arg)
 {
     i2c_master_init();
     initial_acce_angle = setpoint;
-    while(1)
+
+    uint8_t* acce_rd = (uint8_t*) malloc(BUFF_SIZE);
+    uint8_t* gyro_rd = (uint8_t*) malloc(BUFF_SIZE);
+    int16_t* acce_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
+    int16_t* gyro_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
+
+
+    start_mpu();
+    
+    vTaskDelay(100/ portTICK_RATE_MS);
+    
+    //INIT PWM
+    mcpwm_initialize();
+
+    //SELF BALANCING AND LINE FOLLOWING
+    while (1) 
     {
-        uint8_t* acce_rd = (uint8_t*) malloc(BUFF_SIZE);
-        uint8_t* gyro_rd = (uint8_t*) malloc(BUFF_SIZE);
-        int16_t* acce_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
-        int16_t* gyro_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
+      calculate_pitch_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle);
+
+      //complimentary_angle[1] corresponds to the pitch angle
+      pitch_angle = complimentary_angle[1];
 
 
-        start_mpu();
-        
-        vTaskDelay(100/ portTICK_RATE_MS);
-        
-        //INIT PWM
-        mcpwm_initialize();
+      //Calulate PITCH and YAW error
+      calculate_pitch_error();
+      read_sensors();
+      calc_sensor_values();
+      calculate_yaw_error();
+      calculate_yaw_correction();
 
-        //SELF BALANCING AND LINE FOLLOWING
-        while (1) 
-        {
-            calculate_pitch_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle);
+      if(!balanced)
+      {
+          left_pwm = constrain((absolute_pitch_correction), MIN_PWM, MAX_PWM);
+          right_pwm = constrain((absolute_pitch_correction), MIN_PWM, MAX_PWM);
 
-            //complimentary_angle[1] corresponds to the pitch angle
-            pitch_angle = complimentary_angle[1];
+          if (pitch_error > 1)
+          {
+              bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
+          }
 
+          else if (pitch_error < -1)
+          {                     
+              bot_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
+          }
+          else
+          { 
+              bot_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
+          }
 
-            //Calulate PITCH and YAW error
-            calculate_pitch_error();
-            read_sensors();
-            calc_sensor_values();
-            calculate_yaw_error();
-            calculate_yaw_correction();
+          forward_count = 0;
+      }
+      print_info();
+    }
 
-            if(!balanced)
-            {
-                left_pwm = constrain((absolute_pitch_correction ), MIN_PWM, MAX_PWM);
-                right_pwm = constrain((absolute_pitch_correction), MIN_PWM, MAX_PWM);
-                pitchKp = 5.85;
-
-                if (pitch_error > 1)
-                {
-                    bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
-                }
-
-                else if (pitch_error < -1)
-                {                     
-                    bot_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
-                }
-                else
-                { 
-                    bot_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
-                    // extreme_flag = true;
-                }
-
-                // if(absolute(pitch_error>5)&&extreme_flag == true)
-                // {
-                //   bot_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
-                //   vTaskDelay(100);
-                //   extreme_flag = false;
-                //   printf("%s\n","stopped" );
-                //   pitchKp = 10;
-                // }
-                forward_count = 0;
-            }
-            print_info();
-        }
-
-    }    
+      
 }
 
 void app_main()
 {
     
-    nvs_flash_init();
-    // system_init();
-    initialise_wifi();
+    // nvs_flash_init();
+    // initialise_wifi();
     
     xTaskCreate(balance_task,"balance task",100000,NULL,1,NULL);
-    xTaskCreate(&http_server, "http_server", 10000, NULL, 2, NULL);
+    // xTaskCreate(&http_server, "http_server", 10000, NULL, 2, NULL);
 }
