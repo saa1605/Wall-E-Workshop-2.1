@@ -1,22 +1,16 @@
+//C Headers
+
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#include "esp_system.h"
-#include "driver/i2c.h"
 
-#include "driver/adc.h"
-#include "esp_adc_cal.h"
-#include "esp_attr.h"
-#include "driver/mcpwm.h"
-#include "soc/mcpwm_reg.h"
-#include "soc/mcpwm_struct.h"
+//Components
 
 #include "MPU.h"
 #include "SRA18.h"
+#include "TUNING.h"
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-//ALL VARIABLES BEYOND THIS 
-
+adc1_channel_t channel[4] = {ADC_CHANNEL_7, ADC_CHANNEL_6, ADC_CHANNEL_0, ADC_CHANNEL_3};
 
 float yaw_kP= 2;
 float yaw_kI= 0;
@@ -32,15 +26,10 @@ int MAX_INTEGRAL_ERROR= 90;
 int MAX_PWM = 100; 
 int MIN_PWM = 60;
 
-
 float setpoint = 6.5;
 float initial_acce_angle = 6.5;
 float forward_angle = 7.5; 
 float MAX_PITCH_ERROR = -2 ;
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-
 
 // FOR BALANCING
 int is_forward = 1;
@@ -51,7 +40,6 @@ float absolute_pitch_angle = 0;
 
 float pitch_angle = 0, pitch_error, prevpitch_error, pitchDifference, pitchCumulativeError, pitch_correction,integral_term;
 
-
 //FOR LINE FOLLOWING
 float yaw_error, yaw_prev_error, yaw_difference, yaw_cumulative_error, yaw_correction;
 int weights[4] = {-3,-1,1,3};
@@ -60,6 +48,8 @@ uint32_t adc_reading[4];
 float sensor_value[4];
 
 float left_pwm = 0, right_pwm = 0;
+
+float complimentary_angle[2] = {0,0};
 
 float absolute_pitch_correction = 0;
 
@@ -186,31 +176,23 @@ void print_info()
 
 void balance_task(void *arg)
 {
-    i2c_master_init();
-    initial_acce_angle = setpoint;
 
     uint8_t* acce_rd = (uint8_t*) malloc(BUFF_SIZE);
     uint8_t* gyro_rd = (uint8_t*) malloc(BUFF_SIZE);
     int16_t* acce_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
     int16_t* gyro_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
 
-
+    i2c_master_init();
     start_mpu();
-    
-    vTaskDelay(100/ portTICK_RATE_MS);
-    
-    //INIT PWM
     mcpwm_initialize();
+
+    vTaskDelay(100/ portTICK_RATE_MS);
     
 
     //SELF BALANCING AND LINE FOLLOWING
     while (1) 
     {
-        calculate_pitch_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle);
-
-        //complimentary_angle[1] corresponds to the pitch angle
-        pitch_angle = complimentary_angle[1];
-
+        calculate_pitch_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle,complimentary_angle,&pitch_angle);
 
         //Calulate PITCH and YAW error
         calculate_pitch_error();

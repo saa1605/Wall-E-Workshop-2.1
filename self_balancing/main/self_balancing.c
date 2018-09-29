@@ -1,66 +1,53 @@
+//C Headers
+
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#include "esp_system.h"
-#include "driver/i2c.h"
 
-#include "driver/adc.h"
-#include "esp_adc_cal.h"
-#include "esp_attr.h"
-#include "driver/mcpwm.h"
-#include "soc/mcpwm_reg.h"
-#include "soc/mcpwm_struct.h"
-
-#include <string.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/event_groups.h"
-#include "esp_system.h"
-#include "esp_wifi.h"
-#include "esp_event_loop.h"
-#include "esp_log.h"
-#include "nvs_flash.h"
-#include "driver/gpio.h"
-
-#include "lwip/sys.h"
-#include "lwip/netdb.h"
-#include "lwip/api.h"
-#include <stdlib.h>
+//Components
 
 #include "MPU.h"
 #include "SRA18.h"
 #include "TUNING.h"
 
+//Array to store channels of ADC
 adc1_channel_t channel[4] = {ADC_CHANNEL_7, ADC_CHANNEL_6, ADC_CHANNEL_0, ADC_CHANNEL_3};
 
+//Line Following Tuning Parameters
 float yaw_kP= 3;
 float yaw_kI= 0;
 float yaw_kD= 0.5;
 
+//Self Balancing Tuning Parameters
 float pitchKp=  5.85;       
 float pitchKi=  0.095;          
 float pitchKd=  2.8;
 
+//Limiting Variables
 int MAX_PITCH_CORRECTION =100;
 int MAX_INTEGRAL_ERROR= 90;
-
 int MAX_PWM = 100; 
 int MIN_PWM = 60;
 
+//Configuration Variables
 float setpoint = 8;
 float initial_acce_angle = 8;
 float forward_angle = -4.5; 
-
 int is_forward = 1;
-
 bool balanced = false;
 
+//Error and correction values
 float absolute_pitch_correction = 0,absolute_pitch_angle = 0,pitch_angle = 0, pitch_error, prevpitch_error, pitchDifference, pitchCumulativeError, pitch_correction,integral_term;
 
 float left_pwm = 0, right_pwm = 0;
 
+//Pitch and Roll angles
 float complimentary_angle[2] = {0,0};
 
+
+/*
+  Calculate the motor inputs according to angle of the MPU
+*/
 void calculate_pitch_error()
 {
     pitch_error = pitch_angle; 
@@ -87,6 +74,7 @@ void calculate_pitch_error()
     absolute_pitch_correction = constrain(absolute_pitch_correction,0,MAX_PITCH_CORRECTION);
 }
 
+//Debugging
 void print_info()
 {        
     printf("PITCH ANGLE:%f\t",pitch_angle);
@@ -99,6 +87,9 @@ void print_info()
     printf("\n");
 }
 
+/*
+  Create an HTTP server to tune variables wirelessly 
+*/
 void http_server(void *arg)
 {
     printf("%s\n", "http task");
@@ -110,7 +101,7 @@ void http_server(void *arg)
     do {
      err = netconn_accept(conn, &newconn);
      if (err == ERR_OK) {
-       http_server_netconn_serve(newconn,&setpoint,&pitchKp,&pitchKd,&pitchKi,&yaw_kP,&yaw_kD,& yaw_kI);
+       http_server_netconn_serve(newconn,&setpoint,&pitchKp,&pitchKd,&pitchKi,&yaw_kP,&yaw_kD,&yaw_kI);
        netconn_delete(newconn);
      }
     } while(err == ERR_OK);
@@ -118,6 +109,9 @@ void http_server(void *arg)
     netconn_delete(conn);
 }
 
+/*
+  The main task to balance the robot
+*/
 void balance_task(void *arg)
 {
     uint8_t* acce_rd = (uint8_t*) malloc(BUFF_SIZE);
@@ -125,17 +119,15 @@ void balance_task(void *arg)
     int16_t* acce_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
     int16_t* gyro_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
 
-    i2c_master_init();
-    start_mpu();
-    mcpwm_initialize();
+    i2c_master_init();  //Initialise the I2C interface
+    start_mpu();        //Intialise the MPU 
+    mcpwm_initialize(); 
     
     vTaskDelay(100/ portTICK_RATE_MS);
 
     while (1) 
     {
-      calculate_pitch_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle,complimentary_angle);
-
-      pitch_angle = complimentary_angle[1];
+      calculate_pitch_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle,complimentary_angle,&pitch_angle);  //Function to calculate pitch angle based on intial accelerometer angle
 
       calculate_pitch_error();
 

@@ -1,43 +1,15 @@
-#include <stdio.h>
-#include <math.h>
-#include <time.h>
-#include "esp_system.h"
-#include "driver/i2c.h"
+#include "MPU.h"
 
-#define I2C_MASTER_SCL_IO    21   /*!< gpio number for I2C master clock */
-#define I2C_MASTER_SDA_IO    22    /*!< gpio number for I2C master data  */
-#define I2C_MASTER_NUM I2C_NUM_1   /*!< I2C port number for master dev */
-#define I2C_MASTER_TX_BUF_DISABLE   0   /*!< I2C master do not need buffer */
-#define I2C_MASTER_RX_BUF_DISABLE   0   /*!< I2C master do not need buffer */
-#define I2C_MASTER_FREQ_HZ    100000     /*!< I2C master clock frequency */
-
-#define MPU6050_ADDR  0x68    /*!< slave address for BH1750 sensor */
-#define WRITE_BIT  I2C_MASTER_WRITE /*!< I2C master write */
-#define READ_BIT   I2C_MASTER_READ  /*!< I2C master read */
-#define ACK_CHECK_EN   0x1     /*!< I2C master will check ack from slave*/
-#define ACK_CHECK_DIS  0x0     /*!< I2C master will not check ack from slave */
-#define ACK_VAL    0x0         /*!< I2C ack value */
-#define NACK_VAL   0x1         /*!< I2C nack value */
-
-#define ALPHA 0.9934
-
-#define RAD_TO_DEG 57.27272727
-
-#define BUFF_SIZE 6
-#define DELAY_TIME_BETWEEN_ITEMS_MS   5 /*!< delay time between different test items, dt should be small */
-
-#define ACCE_START_ADD 0x3B
-#define GYRO_START_ADD 0x43
-
-float counter = 0;
-uint32_t timer = 0;
-float dt = 0;
-float complimentary_angle[2] = {0, 0};
-float acce_angle[2];
+// #include <stdio.h>
+// #include <math.h>
+// #include <time.h>
+// #include "esp_system.h"
+// #include "driver/i2c.h"
 
 /**
  * @brief mpu6050_init, inittialize MPU6050
  */
+
 esp_err_t mpu6050_init(i2c_port_t i2c_num)
 {
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
@@ -149,9 +121,13 @@ uint32_t msec()
 
 esp_err_t complimentory_filter(int16_t* acce_raw_value, int16_t* gyro_raw_value, float complimentary_angle[], int len, float initial_acce_angle)
 {
-    
+    float counter = 0;
+    uint32_t timer = 0;
+    float dt = 0;
+
     float gyro_angle[2];
     float gyro_rate[2];
+    float acce_angle[2];
     int i;
     
     counter++;
@@ -170,12 +146,9 @@ esp_err_t complimentory_filter(int16_t* acce_raw_value, int16_t* gyro_raw_value,
     acce_angle[1] = (atan2(-(acce_raw_value[0]), acce_raw_value[2]) * RAD_TO_DEG);
     acce_angle[1] = acce_angle[1] - initial_acce_angle;
     for( i = 0; i < 2; i++) {
-        // printf("gyro:%f\n",gyro_angle[i] );
-        // printf("acce:%f\n",acce_angle[i] );
         gyro_rate[i] = gyro_raw_value[i]/131;
         gyro_angle[i] = gyro_rate[i] * dt;
         complimentary_angle[i] = (ALPHA * (complimentary_angle[i] + gyro_angle[i])) + ((1-ALPHA) * acce_angle[i]);    
-
     }
     return ESP_OK;
 }
@@ -195,7 +168,7 @@ void start_mpu()
     printf("INIT SUCESS...\n");	
 }
 
-void calculate_pitch_angle(uint8_t* acce_rd ,uint8_t* gyro_rd,int16_t* acce_raw_value,int16_t* gyro_raw_value, float initial_acce_angle)
+void calculate_pitch_angle(uint8_t* acce_rd ,uint8_t* gyro_rd,int16_t* acce_raw_value,int16_t* gyro_raw_value, float initial_acce_angle, float complimentary_angle[2],float *pitch_angle)
 {
 	int ret;
     /*Read raw gyro values*/
@@ -209,6 +182,7 @@ void calculate_pitch_angle(uint8_t* acce_rd ,uint8_t* gyro_rd,int16_t* acce_raw_
 
     //Get pitch angle using complimentary filter
     complimentory_filter(acce_raw_value, gyro_raw_value, complimentary_angle, BUFF_SIZE/2,initial_acce_angle);
+    *pitch_angle = complimentary_angle[1];
 
 }
 
