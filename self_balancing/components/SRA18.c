@@ -1,3 +1,5 @@
+#include "SRA18.h"
+
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
@@ -8,18 +10,6 @@
 #include "driver/mcpwm.h"
 #include "soc/mcpwm_reg.h"
 #include "soc/mcpwm_struct.h"
-
-#define GPIO_PWM0A_OUT 27   //Set GPIO 15 as PWM0A - Enable
-#define GPIO_PWM0B_OUT 14   //Set GPIO 16 as PWM0B 
-#define GPIO_NUM0 25  //GPIO to input pin of motor driver
-#define GPIO_NUM1 26  //GPIO to input pin of motor driver
-#define GPIO_NUM2 16
-#define GPIO_NUM3 17
-
-adc1_channel_t channel[4] = {ADC_CHANNEL_7, ADC_CHANNEL_6, ADC_CHANNEL_0, ADC_CHANNEL_3}; // 35 34 36 39
-static const adc_atten_t atten = ADC_ATTEN_11db;
-static const adc_unit_t unit = ADC_UNIT_1;
-
 
 //Functions for custom adjustments
 
@@ -51,11 +41,14 @@ float absolute(float number)
 
 //ADC
 
-static void adc1_init()
+ void adc1_init(adc1_channel_t channel[4])
 {
     //Configure ADC
 
+    static const adc_atten_t atten = ADC_ATTEN_11db;
+
     adc1_config_width(ADC_WIDTH_BIT_12);
+    
     for(int i = 0;i < 4;i++)
     {
       adc1_config_channel_atten(channel[i], atten);
@@ -64,7 +57,7 @@ static void adc1_init()
 
 //MCPWM
 
-static void mcpwm_gpio_initialize()
+ void mcpwm_gpio_initialize()
 {
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, GPIO_PWM0A_OUT);
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, GPIO_PWM0B_OUT);
@@ -73,7 +66,7 @@ static void mcpwm_gpio_initialize()
 /**
  * @brief Configure MCPWM module for brushed dc motor
  */
-static void mcpwm_initialize()
+ void mcpwm_initialize()
 {
     //1. mcpwm gpio initialization
     mcpwm_gpio_initialize();
@@ -97,7 +90,7 @@ static void mcpwm_initialize()
 }
 
 
-static void bot_forward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle1, float duty_cycle2)
+ void bot_forward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle1, float duty_cycle2)
 {
     // printf("%s\n","BOT FORWARD");
     mcpwm_set_duty(mcpwm_num, timer_num, MCPWM_OPR_A, duty_cycle1);
@@ -110,7 +103,7 @@ static void bot_forward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float 
     mcpwm_set_duty_type(mcpwm_num, timer_num, MCPWM_OPR_B, MCPWM_DUTY_MODE_0); //call this each time, if operator was previously in low/high state
 }
 
-static void bot_backward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle1, float duty_cycle2)
+ void bot_backward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle1, float duty_cycle2)
 {
     // printf("%s\n","BOT BACKWARD");
     mcpwm_set_duty(mcpwm_num, timer_num, MCPWM_OPR_A, duty_cycle1);
@@ -123,7 +116,7 @@ static void bot_backward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float
     mcpwm_set_duty_type(mcpwm_num, timer_num, MCPWM_OPR_B, MCPWM_DUTY_MODE_0); //call this each time, if operator was previously in low/high state
 }
 
-static void bot_stop(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num)
+ void bot_stop(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num)
 {
     mcpwm_set_signal_low(mcpwm_num, timer_num, MCPWM_OPR_A);
     mcpwm_set_signal_low(mcpwm_num, timer_num, MCPWM_OPR_B);

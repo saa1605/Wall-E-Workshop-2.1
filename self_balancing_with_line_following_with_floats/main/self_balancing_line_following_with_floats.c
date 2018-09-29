@@ -201,6 +201,7 @@ void balance_task(void *arg)
     
     //INIT PWM
     mcpwm_initialize();
+    
 
     //SELF BALANCING AND LINE FOLLOWING
     while (1) 
