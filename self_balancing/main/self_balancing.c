@@ -10,6 +10,13 @@
 #include "SRA18.h"
 #include "TUNING.h"
 
+//Limiting Variables
+#define MAX_PITCH_CORRECTION 80
+#define MAX_INTEGRAL_ERROR 75
+
+#define MAX_PWM 90 
+#define MIN_PWM 60
+
 //Array to store channels of ADC
 adc1_channel_t channel[4] = {ADC_CHANNEL_7, ADC_CHANNEL_6, ADC_CHANNEL_0, ADC_CHANNEL_3};
 
@@ -21,17 +28,11 @@ float yaw_kD= 0.5;
 //Self Balancing Tuning Parameters
 float pitchKp=  5.85;       
 float pitchKi=  0.095;          
-float pitchKd=  2.8;
-
-//Limiting Variables
-int MAX_PITCH_CORRECTION =100;
-int MAX_INTEGRAL_ERROR= 90;
-int MAX_PWM = 100; 
-int MIN_PWM = 60;
+float pitchKd=  3.8;
 
 //Configuration Variables
-float setpoint = 8;
-float initial_acce_angle = 8;
+float setpoint = 6;
+float initial_acce_angle = 6;
 float forward_angle = -4.5; 
 int is_forward = 1;
 bool balanced = false;
@@ -54,12 +55,6 @@ void calculate_pitch_error()
     pitchDifference = (pitch_error - prevpitch_error);
     pitchCumulativeError += pitch_error;
 
-    //RESET CUMULATIVE ERROR EVERYTIME BOT CROSSES THE ORIGIN
-    if(pitch_error*prevpitch_error < 0)
-    {
-        pitchCumulativeError = 0;
-    }  
-
     integral_term = pitchCumulativeError*pitchKi;   
 
     if(integral_term>MAX_INTEGRAL_ERROR)
@@ -78,11 +73,13 @@ void calculate_pitch_error()
 void print_info()
 {        
     printf("PITCH ANGLE:%f\t",pitch_angle);
-    printf("PITCH ERROR%f\t",pitch_error);
-    printf("PITCH CORRECTION %f\n",pitch_correction);
-    printf("ABSOLUTE PITCH CORRECTION: %f\t",absolute_pitch_correction);
-    printf("LEFT PWM: %f\t",left_pwm);
-    printf("RIGHT PWM: %f\n",right_pwm);
+    printf("setpoint%f",setpoint);
+    printf("initial_acce_angle%f",initial_acce_angle);
+    // printf("PITCH ERROR%f\t",pitch_error);
+    // printf("PITCH CORRECTION %f\n",pitch_correction);
+    // printf("ABSOLUTE PITCH CORRECTION: %f\t",absolute_pitch_correction);
+    // printf("LEFT PWM: %f\t",left_pwm);
+    // printf("RIGHT PWM: %f\n",right_pwm);
 
     printf("\n");
 }
@@ -127,10 +124,10 @@ void balance_task(void *arg)
 
     while (1) 
     {
-      calculate_pitch_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle,complimentary_angle,&pitch_angle);  //Function to calculate pitch angle based on intial accelerometer angle
-
+      
+      calculate_pitch_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle,&pitch_angle);  //Function to calculate pitch angle based on intial accelerometer angle
       calculate_pitch_error();
-
+      
       if(!balanced)
       {
           left_pwm = constrain((absolute_pitch_correction), MIN_PWM, MAX_PWM);
@@ -156,9 +153,9 @@ void balance_task(void *arg)
 void app_main()
 {
     
-    nvs_flash_init();
-    initialise_wifi();
+    // nvs_flash_init();
+    // initialise_wifi();
     
     xTaskCreate(balance_task,"balance task",100000,NULL,1,NULL);
-    xTaskCreate(&http_server, "http_server", 10000, NULL, 2, NULL);
+    // xTaskCreate(&http_server, "http_server", 10000, NULL, 2, NULL);
 }

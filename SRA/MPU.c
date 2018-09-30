@@ -1,15 +1,8 @@
 #include "MPU.h"
 
-// #include <stdio.h>
-// #include <math.h>
-// #include <time.h>
-// #include "esp_system.h"
-// #include "driver/i2c.h"
-
 /**
  * @brief mpu6050_init, inittialize MPU6050
  */
-
 esp_err_t mpu6050_init(i2c_port_t i2c_num)
 {
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
@@ -164,8 +157,10 @@ void start_mpu()
         printf("INIT FAILED... Retry\n");
         vTaskDelay(100/ portTICK_RATE_MS);
         ret = mpu6050_init(I2C_MASTER_NUM);
+        gpio_set_level(LED_1,0);    //Set LED1 ON
     }
     printf("INIT SUCESS...\n");	
+    gpio_set_level(LED1,1);
 }
 
 void calculate_pitch_angle(uint8_t* acce_rd ,uint8_t* gyro_rd,int16_t* acce_raw_value,int16_t* gyro_raw_value, float initial_acce_angle, float complimentary_angle[2],float *pitch_angle)

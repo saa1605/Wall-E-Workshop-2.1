@@ -10,35 +10,40 @@
 #include "SRA18.h"
 #include "TUNING.h"
 
-adc1_channel_t channel[4] = {ADC_CHANNEL_7, ADC_CHANNEL_6, ADC_CHANNEL_0, ADC_CHANNEL_3};
+//4Limiting Parameters
+#define MAX_PITCH_CORRECTION 80
+#define MAX_INTEGRAL_ERROR 75
 
+#define MAX_PWM 90 
+#define MIN_PWM 60
+
+#define MAX_PITCH_ERROR -1.5 
+
+//ADC Channels
+adc1_channel_t channel[4] = {ADC_CHANNEL_3,ADC_CHANNEL_0,ADC_CHANNEL_6,ADC_CHANNEL_7};
+
+//Line Following Tuning Parameters
 float yaw_kP= 2;
 float yaw_kI= 0;
-float yaw_kD= 0.75;
+float yaw_kD= 1;
 
-float pitchKp=  5.85;       
-float pitchKi=  0.095;          
-float pitchKd=  2.8;
-
-int MAX_PITCH_CORRECTION =90;
-int MAX_INTEGRAL_ERROR= 90;
-
-int MAX_PWM = 100; 
-int MIN_PWM = 60;
+//Self Balancing Tuning Parameters
+float pitch_kP=  5.85;       
+float pitch_kI=  0.095;          
+float pitch_kD=  3.8;
 
 float setpoint = 6.5;
 float initial_acce_angle = 6.5;
-float forward_angle = 7.5; 
-float MAX_PITCH_ERROR = -2 ;
+float forward_angle = 7; 
 
-// FOR BALANCING
+//FOR BALANCING
 int is_forward = 1;
 int forward_count = 0;
 
 bool balanced = false;
 float absolute_pitch_angle = 0;
 
-float pitch_angle = 0, pitch_error, prevpitch_error, pitchDifference, pitchCumulativeError, pitch_correction,integral_term;
+float pitch_angle = 0, absolute_pitch_correction = 0, pitch_error, prevpitch_error, pitchDifference, pitchCumulativeError, pitch_correction,integral_term;
 
 //FOR LINE FOLLOWING
 float yaw_error, yaw_prev_error, yaw_difference, yaw_cumulative_error, yaw_correction;
@@ -49,21 +54,14 @@ float sensor_value[4];
 
 float left_pwm = 0, right_pwm = 0;
 
-float complimentary_angle[2] = {0,0};
-
-float absolute_pitch_correction = 0;
-
-
 static void read_sensors()
 {
   for(int i = 0; i < 4; i++)
     {
         adc_reading[i] = adc1_get_raw(channel[i]);
         // printf("%d\t",adc_reading[i]);
-
     }
     // printf("\n");
-
 }
 
 static void calc_sensor_values()
@@ -72,10 +70,8 @@ static void calc_sensor_values()
     {
         sensor_value[i] = map(adc_reading[i], 1700, 4000, 0, 1000);
         sensor_value[i] = constrain(sensor_value[i],0,1000);
-        // printf("%f\t",sensor_value[i]);
-    }
 
-    // printf("\n");
+    }
 }
 
 static void calculate_yaw_error()
@@ -103,9 +99,9 @@ static void calculate_yaw_error()
     if(all_black_flag == 1)
     {
         if(yaw_error > 0)
-            pos = 3000;
+            pos = 30;
         else
-            pos = -3000;
+            pos = -30;
     }
 
     yaw_error = pos;
@@ -138,19 +134,14 @@ void calculate_pitch_error()
     pitchDifference = (pitch_error - prevpitch_error);
     pitchCumulativeError += pitch_error;
 
-    if(pitch_error*prevpitch_error < 0)
-    {
-        pitchCumulativeError = 0;
-    }  
-
-    integral_term = pitchCumulativeError*pitchKi;   
+    integral_term = pitchCumulativeError*pitch_kI;   
 
     if(integral_term>MAX_INTEGRAL_ERROR)
         integral_term = MAX_INTEGRAL_ERROR;
     else if(integral_term<-MAX_INTEGRAL_ERROR)
         integral_term= -MAX_INTEGRAL_ERROR;
     
-    pitch_correction = pitchKp * pitch_error + integral_term + pitchKd * pitchDifference;
+    pitch_correction = pitch_kP * pitch_error + integral_term + pitch_kD * pitchDifference;
     prevpitch_error = pitch_error;
 
     absolute_pitch_correction = absolute(pitch_correction);
@@ -161,20 +152,20 @@ void print_info()
 {        
     
     // printf("ROLL ANGLE: %f\n", complimentary_angle[0]);
-    printf("PITCH ANGLE:%f\t",pitch_angle);
+    // printf("PITCH ANGLE:%f\t",pitch_angle);
     // printf("PITCH ERROR%f\t",pitch_error);
     // printf("YAW ERROR: %f\t",yaw_error);
     // printf("YAW CORRECTION: %f\t",yaw_correction);  
     // printf("PITCH CORRECTION %f\n",pitch_correction);
     // printf("ABSOLUTE PITCH CORRECTION: %f\t",absolute_pitch_correction);
     // printf("YAW CORRECTION: %f\t", yaw_correction);
-    // printf("LEFT PWM: %f\t",left_pwm);
-    // printf("RIGHT PWM: %f\n",right_pwm);
+    printf("LEFT PWM: %f\t",left_pwm);
+    printf("RIGHT PWM: %f\n",right_pwm);
 
     printf("\n");
 }
 
-void balance_task(void *arg)
+void balance_with_line_follow_task(void *arg)
 {
 
     uint8_t* acce_rd = (uint8_t*) malloc(BUFF_SIZE);
@@ -192,7 +183,7 @@ void balance_task(void *arg)
     //SELF BALANCING AND LINE FOLLOWING
     while (1) 
     {
-        calculate_pitch_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle,complimentary_angle,&pitch_angle);
+        calculate_pitch_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle,&pitch_angle);
 
         //Calulate PITCH and YAW error
         calculate_pitch_error();
@@ -210,12 +201,10 @@ void balance_task(void *arg)
             is_forward = -1;
         }
 
-        left_pwm = constrain((absolute_pitch_correction +50 + is_forward*yaw_correction), MIN_PWM, MAX_PWM);
-        right_pwm = constrain((absolute_pitch_correction +50 - is_forward*yaw_correction), MIN_PWM, MAX_PWM);
-
-
+        
         if(!balanced)
         {
+            // SET DIRECTION OF BOT FOR BALANCING
             if (pitch_error > 1)
             {
                 bot_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, left_pwm, right_pwm);
@@ -231,12 +220,16 @@ void balance_task(void *arg)
                 initial_acce_angle = forward_angle;
                 balanced = true;
             }
+
+            left_pwm = constrain((absolute_pitch_correction),MIN_PWM,MAX_PWM);
+            right_pwm = constrain((absolute_pitch_correction),MIN_PWM,MAX_PWM);
+
         }
 
         else
         {
-
-            //CHECK DIRECTION OF BOT MOTION FOR ADDING OR SUBTRACTING YAW CORRECTION
+            left_pwm = constrain((absolute_pitch_correction +40 + is_forward*yaw_correction), MIN_PWM, MAX_PWM);
+            right_pwm = constrain((absolute_pitch_correction +40 - is_forward*yaw_correction), MIN_PWM, MAX_PWM);
 
 
             // SET DIRECTION OF BOT FOR BALANCING
@@ -254,12 +247,11 @@ void balance_task(void *arg)
                 bot_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
             }
 
-            //FORWARD COUNT TO BRING THE BOT OUT OF BALANCED CONDITION
-            if(pitch_error>1 || pitch_error < MAX_PITCH_ERROR)
+            
+            if(pitch_error>0.5 || pitch_error < MAX_PITCH_ERROR)
             {
                 initial_acce_angle = setpoint;
                 balanced = false;
-
             }
 
         }
@@ -271,5 +263,5 @@ void balance_task(void *arg)
 
 void app_main()
 {
-    xTaskCreate(balance_task,"balance task",100000,NULL,1,NULL);
+    xTaskCreate(&balance_with_line_follow_task,"self_balancing with line_following",100000,NULL,1,NULL);
 }
