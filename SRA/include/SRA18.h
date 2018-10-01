@@ -19,9 +19,9 @@
 #define GPIO_NUM2 16
 #define GPIO_NUM3 17
 #define BUTTON_1 2
-#define BUTTON_2 5
+#define BUTTON_2 15
 #define LED_1 0
-#define LED_2 15
+#define LED_2 5
 
 float map(float x, float min_in, float max_in, float min_out, float max_out);
 

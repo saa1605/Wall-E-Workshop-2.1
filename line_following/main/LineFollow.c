@@ -44,7 +44,7 @@ float left_pwm = 0, right_pwm = 0;
 /*
  * Line Following PID Variables
  */
-float error, prev_error, difference, cumulative_error, correction;
+float error=0, prev_error, difference, cumulative_error, correction;
 
 uint32_t adc_reading[4];
 float sensor_value[4];

@@ -1,16 +1,5 @@
 #include "SRA18.h"
 
-// #include <stdio.h>
-// #include <math.h>
-// #include <time.h>
-
-// #include "driver/adc.h"
-// #include "esp_adc_cal.h"
-// #include "esp_attr.h"
-// #include "driver/mcpwm.h"
-// #include "soc/mcpwm_reg.h"
-// #include "soc/mcpwm_struct.h"
-
 //Functions for custom adjustments
 
 float map(float x, float min_in, float max_in, float min_out, float max_out)

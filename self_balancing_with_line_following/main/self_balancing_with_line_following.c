@@ -59,9 +59,9 @@ static void read_sensors()
   for(int i = 0; i < 4; i++)
     {
         adc_reading[i] = adc1_get_raw(channel[i]);
-        // printf("%d\t",adc_reading[i]);
+        printf("%d\t",adc_reading[i]);
     }
-    // printf("\n");
+    printf("\n");
 }
 
 static void calc_sensor_values()
@@ -167,7 +167,6 @@ void print_info()
 
 void balance_with_line_follow_task(void *arg)
 {
-
     uint8_t* acce_rd = (uint8_t*) malloc(BUFF_SIZE);
     uint8_t* gyro_rd = (uint8_t*) malloc(BUFF_SIZE);
     int16_t* acce_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
@@ -255,7 +254,6 @@ void balance_with_line_follow_task(void *arg)
             }
 
         }
-        print_info();
     }
 
        
