@@ -26,9 +26,9 @@ float yaw_kI= 0;
 float yaw_kD= 0.5;
 
 //Self Balancing Tuning Parameters
-float pitchKp=  5.85;       
-float pitchKi=  0.095;          
-float pitchKd=  3.8;
+float pitch_kP=  5.85;       
+float pitch_kI=  0.095;          
+float pitch_kD=  3.8;
 
 //Configuration Variables
 float setpoint = 6;
@@ -38,7 +38,7 @@ int is_forward = 1;
 bool balanced = false;
 
 //Error and correction values
-float absolute_pitch_correction = 0,absolute_pitch_angle = 0,pitch_angle = 0, pitch_error, prevpitch_error, pitchDifference, pitchCumulativeError, pitch_correction,integral_term;
+float absolute_pitch_correction = 0,absolute_pitch_angle = 0,pitch_angle = 0,roll_angle = 0,pitch_error, prevpitch_error, pitchDifference, pitchCumulativeError, pitch_correction,integral_term;
 
 float left_pwm = 0, right_pwm = 0;
 
@@ -55,14 +55,14 @@ void calculate_pitch_error()
     pitchDifference = (pitch_error - prevpitch_error);
     pitchCumulativeError += pitch_error;
 
-    integral_term = pitchCumulativeError*pitchKi;   
+    integral_term = pitchCumulativeError*pitch_kI;   
 
     if(integral_term>MAX_INTEGRAL_ERROR)
         integral_term = MAX_INTEGRAL_ERROR;
     else if(integral_term<-MAX_INTEGRAL_ERROR)
         integral_term= -MAX_INTEGRAL_ERROR;
     
-    pitch_correction = pitchKp * pitch_error + integral_term + pitchKd * pitchDifference;
+    pitch_correction = pitch_kP * pitch_error + integral_term + pitch_kD * pitchDifference;
     prevpitch_error = pitch_error;
 
     absolute_pitch_correction = absolute(pitch_correction);
@@ -98,7 +98,7 @@ void http_server(void *arg)
     do {
      err = netconn_accept(conn, &newconn);
      if (err == ERR_OK) {
-       http_server_netconn_serve(newconn,&setpoint,&pitchKp,&pitchKd,&pitchKi,&yaw_kP,&yaw_kD,&yaw_kI);
+       http_server_netconn_serve(newconn,&setpoint,&forward_angle,&pitch_kP,&pitch_kD,&pitch_kI,&yaw_kP,&yaw_kD,&yaw_kI);
        netconn_delete(newconn);
      }
     } while(err == ERR_OK);
@@ -124,8 +124,8 @@ void balance_task(void *arg)
 
     while (1) 
     {
-      
-      calculate_pitch_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle,&pitch_angle);  //Function to calculate pitch angle based on intial accelerometer angle
+      initial_acce_angle = setpoint;
+      calculate_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle,&roll_angle,&pitch_angle);  //Function to calculate pitch angle based on intial accelerometer angle
       calculate_pitch_error();
       
       if(!balanced)

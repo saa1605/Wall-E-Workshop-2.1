@@ -17,7 +17,7 @@
 #define MAX_PWM 90 
 #define MIN_PWM 60
 
-#define MAX_PITCH_ERROR -1.5 
+#define MAX_PITCH_ERROR -2.5 
 
 //ADC Channels
 adc1_channel_t channel[4] = {ADC_CHANNEL_3,ADC_CHANNEL_0,ADC_CHANNEL_6,ADC_CHANNEL_7};
@@ -32,9 +32,9 @@ float pitch_kP=  5.85;
 float pitch_kI=  0.095;          
 float pitch_kD=  3.8;
 
-float setpoint = 6.5;
-float initial_acce_angle = 6.5;
-float forward_angle = 7; 
+float setpoint = 6;
+float initial_acce_angle = 6;
+float forward_angle = 7.5; 
 
 //FOR BALANCING
 int is_forward = 1;
@@ -43,7 +43,7 @@ int forward_count = 0;
 bool balanced = false;
 float absolute_pitch_angle = 0;
 
-float pitch_angle = 0, absolute_pitch_correction = 0, pitch_error, prevpitch_error, pitchDifference, pitchCumulativeError, pitch_correction,integral_term;
+float pitch_angle = 0,roll_angle = 0,absolute_pitch_correction = 0, pitch_error, prevpitch_error, pitchDifference, pitchCumulativeError, pitch_correction,integral_term;
 
 //FOR LINE FOLLOWING
 float yaw_error, yaw_prev_error, yaw_difference, yaw_cumulative_error, yaw_correction;
@@ -59,9 +59,9 @@ static void read_sensors()
   for(int i = 0; i < 4; i++)
     {
         adc_reading[i] = adc1_get_raw(channel[i]);
-        printf("%d\t",adc_reading[i]);
+        // printf("%d\t",adc_reading[i]);
     }
-    printf("\n");
+    // printf("\n");
 }
 
 static void calc_sensor_values()
@@ -165,6 +165,28 @@ void print_info()
     printf("\n");
 }
 
+/*
+  Create an HTTP server to tune variables wirelessly 
+*/
+void http_server(void *arg)
+{
+    printf("%s\n", "http task");
+    struct netconn *conn, *newconn;
+    err_t err;
+    conn = netconn_new(NETCONN_TCP);
+    netconn_bind(conn, NULL, 80);
+    netconn_listen(conn);
+    do {
+     err = netconn_accept(conn, &newconn);
+     if (err == ERR_OK) {
+       http_server_netconn_serve(newconn,&setpoint,&forward_angle,&pitch_kP,&pitch_kD,&pitch_kI,&yaw_kP,&yaw_kD,&yaw_kI);
+       netconn_delete(newconn);
+     }
+    } while(err == ERR_OK);
+    netconn_close(conn);
+    netconn_delete(conn);
+}
+
 void balance_with_line_follow_task(void *arg)
 {
     uint8_t* acce_rd = (uint8_t*) malloc(BUFF_SIZE);
@@ -182,7 +204,8 @@ void balance_with_line_follow_task(void *arg)
     //SELF BALANCING AND LINE FOLLOWING
     while (1) 
     {
-        calculate_pitch_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle,&pitch_angle);
+
+        calculate_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle,&roll_angle,&pitch_angle);
 
         //Calulate PITCH and YAW error
         calculate_pitch_error();
@@ -227,8 +250,8 @@ void balance_with_line_follow_task(void *arg)
 
         else
         {
-            left_pwm = constrain((absolute_pitch_correction +40 + is_forward*yaw_correction), MIN_PWM, MAX_PWM);
-            right_pwm = constrain((absolute_pitch_correction +40 - is_forward*yaw_correction), MIN_PWM, MAX_PWM);
+            left_pwm = constrain((absolute_pitch_correction + is_forward*yaw_correction), MIN_PWM, MAX_PWM);
+            right_pwm = constrain((absolute_pitch_correction - is_forward*yaw_correction), MIN_PWM, MAX_PWM);
 
 
             // SET DIRECTION OF BOT FOR BALANCING
@@ -261,5 +284,9 @@ void balance_with_line_follow_task(void *arg)
 
 void app_main()
 {
+    nvs_flash_init();
+    initialise_wifi();
     xTaskCreate(&balance_with_line_follow_task,"self_balancing with line_following",100000,NULL,1,NULL);
+    xTaskCreate(&http_server,"server",10000,NULL,2,NULL);
+
 }
