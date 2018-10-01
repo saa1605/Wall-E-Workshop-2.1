@@ -191,7 +191,7 @@ void start_mpu()
 
 
 
-void calculate_pitch_angle(uint8_t* acce_rd ,uint8_t* gyro_rd,int16_t* acce_raw_value,int16_t* gyro_raw_value, float initial_acce_angle,float *pitch_angle)
+void calculate_angle(uint8_t* acce_rd ,uint8_t* gyro_rd,int16_t* acce_raw_value,int16_t* gyro_raw_value, float initial_acce_angle,float *roll_angle,float *pitch_angle)
 {
     int ret;
     /*Read raw gyro values*/
@@ -205,6 +205,9 @@ void calculate_pitch_angle(uint8_t* acce_rd ,uint8_t* gyro_rd,int16_t* acce_raw_
 
     //Get pitch angle using complimentary filter
     complimentory_filter(acce_raw_value, gyro_raw_value, complimentary_angle, BUFF_SIZE/2,initial_acce_angle);
+    
+    *roll_angle = complimentary_angle[0];
     *pitch_angle = complimentary_angle[1];
 }
+
 

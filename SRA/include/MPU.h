@@ -50,6 +50,6 @@ esp_err_t complimentory_filter(int16_t* acce_raw_value, int16_t* gyro_raw_value,
 
 void start_mpu();
 
-void calculate_pitch_angle(uint8_t* acce_rd ,uint8_t* gyro_rd,int16_t* acce_raw_value,int16_t* gyro_raw_value, float initial_acce_angle,float *pitch_angle);
+void calculate_angle(uint8_t* acce_rd ,uint8_t* gyro_rd,int16_t* acce_raw_value,int16_t* gyro_raw_value, float initial_acce_angle,float *roll_angle,float *pitch_angle);
 
 #endif
