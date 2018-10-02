@@ -27,12 +27,12 @@ float yaw_kD= 0.5;
 
 //Self Balancing Tuning Parameters
 float pitch_kP=  5.85;       
-float pitch_kI=  0;//0.095;          
+float pitch_kI=  0.095;          
 float pitch_kD=  3.8;
 
 //Configuration Variables
-float setpoint = 6;
-float initial_acce_angle = 6;
+float setpoint = 8;
+float initial_acce_angle = 8;
 float forward_angle = -4.5; 
 int is_forward = 1;
 bool balanced = false;

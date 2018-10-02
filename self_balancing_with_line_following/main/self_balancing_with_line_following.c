@@ -32,9 +32,9 @@ float pitch_kP=  5.85;
 float pitch_kI=  0.095;          
 float pitch_kD=  3.8;
 
-float setpoint = 6;
-float initial_acce_angle = 6;
-float forward_angle = 7.5; 
+float setpoint = 8;
+float initial_acce_angle = 0;
+float forward_angle = 0;
 
 //FOR BALANCING
 int is_forward = 1;
@@ -192,6 +192,8 @@ void http_server(void *arg)
 
 void balance_with_line_follow_task(void *arg)
 {
+    
+    
     uint8_t* acce_rd = (uint8_t*) malloc(BUFF_SIZE);
     uint8_t* gyro_rd = (uint8_t*) malloc(BUFF_SIZE);
     int16_t* acce_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
@@ -226,6 +228,7 @@ void balance_with_line_follow_task(void *arg)
 
         if(!balanced)
         {
+            initial_acce_angle = setpoint;
             // SET DIRECTION OF BOT FOR BALANCING
             if (pitch_error > 1)
             {
@@ -250,7 +253,7 @@ void balance_with_line_follow_task(void *arg)
 
         else
         {
-
+            forward_angle = setpoint + 1.5;
 
             left_pwm = constrain((absolute_pitch_correction + yaw_correction), MIN_PWM, MAX_PWM);
             right_pwm = constrain((absolute_pitch_correction - yaw_correction), MIN_PWM, MAX_PWM);
@@ -282,7 +285,7 @@ void balance_with_line_follow_task(void *arg)
             }
 
             // Change intial_acce_angle back to setpoint if bot exceeds forward_angle buffer
-            if(pitch_error>3 || pitch_error < MAX_PITCH_ERROR)
+            if(pitch_error>2 || pitch_error < MAX_PITCH_ERROR)
             {
                 initial_acce_angle = setpoint;
                 balanced = false;
