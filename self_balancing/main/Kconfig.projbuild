@@ -1,12 +1,12 @@
 menu "Wifi Configuration"
 
-config EXAMPLE_WIFI_SSID
+config WIFI_SSID
     string "WiFi SSID"
     default "SSID"
     help
 	SSID (network name) for the example to connect to.
 
-config EXAMPLE_WIFI_PASSWORD
+config WIFI_PASS
     string "WiFi Password"
     default "PASSWORD"
     help

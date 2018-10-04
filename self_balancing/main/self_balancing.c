@@ -17,8 +17,16 @@
 #define MAX_PWM 90 
 #define MIN_PWM 60
 
-#define WIFI_SSID "SSID"
-#define WIFI_PASSWORD "PASSWORD"
+//Wifi Parameters 
+#define EXAMPLE_WIFI_SSID CONFIG_WIFI_SSID
+#define EXAMPLE_WIFI_PASS CONFIG_WIFI_PASS
+
+wifi_config_t wifi_config = {
+    .sta = {
+        .ssid = EXAMPLE_WIFI_SSID,
+        .password = EXAMPLE_WIFI_PASS,
+    },
+};
 
 //Array to store channels of ADC
 adc1_channel_t channel[4] = {ADC_CHANNEL_7, ADC_CHANNEL_6, ADC_CHANNEL_0, ADC_CHANNEL_3};
@@ -92,8 +100,8 @@ void print_info()
     // printf("PITCH ANGLE:%f\t",pitch_angle);
     // printf("PITCH ERROR%f\t",pitch_error);
     // printf("PITCH CORRECTION %f\n",pitch_correction);
-    printf("ABSOLUTE PITCH CORRECTION: %f\t",absolute_pitch_correction);
-    printf("INTEGRAL TERM %f\n",pitch_cumulative_error);
+    // printf("ABSOLUTE PITCH CORRECTION: %f\t",absolute_pitch_correction);
+    // printf("INTEGRAL TERM %f\n",pitch_cumulative_error);
     // printf("LEFT PWM: %f\t",left_pwm);
     // printf("RIGHT PWM: %f\n",right_pwm);
 
@@ -171,7 +179,7 @@ void app_main()
 {
     
     nvs_flash_init();
-    initialise_wifi();
+    initialise_wifi(wifi_config);
     
     xTaskCreate(balance_task,"balance task",100000,NULL,1,NULL);
     xTaskCreate(&http_server, "http_server", 10000, NULL, 2, NULL);

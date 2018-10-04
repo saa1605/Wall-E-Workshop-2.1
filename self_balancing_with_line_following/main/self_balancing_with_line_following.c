@@ -19,6 +19,17 @@
 
 #define MAX_PITCH_ERROR -2.5
 
+//Wifi Parameters
+#define EXAMPLE_WIFI_SSID CONFIG_WIFI_SSID
+#define EXAMPLE_WIFI_PASS CONFIG_WIFI_PASS
+
+wifi_config_t wifi_config = {
+    .sta = {
+        .ssid = EXAMPLE_WIFI_SSID,
+        .password = EXAMPLE_WIFI_PASS,
+    },
+};
+
 //ADC Channels
 adc1_channel_t channel[4] = {ADC_CHANNEL_3,ADC_CHANNEL_0,ADC_CHANNEL_6,ADC_CHANNEL_7};
 
@@ -319,7 +330,7 @@ void balance_with_line_follow_task(void *arg)
 void app_main()
 {
     nvs_flash_init();
-    initialise_wifi();
+    initialise_wifi(wifi_config);
     xTaskCreate(&balance_with_line_follow_task,"self_balancing with line_following",100000,NULL,1,NULL);
     xTaskCreate(&http_server,"server",10000,NULL,2,NULL);
 
