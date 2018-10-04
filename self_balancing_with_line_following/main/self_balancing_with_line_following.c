@@ -11,8 +11,8 @@
 #include "TUNING.h"
 
 //4Limiting Parameters
-#define MAX_PITCH_CORRECTION 80
-#define MAX_INTEGRAL_ERROR 75
+#define MAX_PITCH_CORRECTION 85
+#define MAX_INTEGRAL_ERROR 750
 
 #define MAX_PWM 100
 #define MIN_PWM 60
@@ -23,16 +23,23 @@
 adc1_channel_t channel[4] = {ADC_CHANNEL_3,ADC_CHANNEL_0,ADC_CHANNEL_6,ADC_CHANNEL_7};
 
 //Line Following Tuning Parameters
-float yaw_kP= 4.5;
+float yaw_kP= 5;
 float yaw_kI= 0;
 float yaw_kD= 1.5;
 
 //Self Balancing Tuning Parameters
-float pitch_kP=  5.85;       
-float pitch_kI=  0.095;          
-float pitch_kD=  3.8;
 
-float setpoint = 8;
+//OLD
+// float pitch_kP=  5.85;       
+// float pitch_kI=  0.095;          
+// float pitch_kD=  3.8;
+
+//NEW
+float pitch_kP=  15;//5.85;       
+float pitch_kI=  0.075;//95;          
+float pitch_kD=  9;
+
+float setpoint = 4.5;
 float initial_acce_angle = 0;
 float forward_angle = 0;
 
@@ -137,14 +144,22 @@ void calculate_pitch_error()
     pitchDifference = (pitch_error - prevpitch_error);
     pitchCumulativeError += pitch_error;
 
-    integral_term = pitchCumulativeError*pitch_kI;   
+    // integral_term = pitchCumulativeError*pitch_kI;   
 
-    if(integral_term>MAX_INTEGRAL_ERROR)
-        integral_term = MAX_INTEGRAL_ERROR;
-    else if(integral_term<-MAX_INTEGRAL_ERROR)
-        integral_term= -MAX_INTEGRAL_ERROR;
+    // if(integral_term>MAX_INTEGRAL_ERROR)
+    //     integral_term = MAX_INTEGRAL_ERROR;
+    // else if(integral_term<-MAX_INTEGRAL_ERROR)
+    //     integral_term= -MAX_INTEGRAL_ERROR;
+    if(pitchCumulativeError>MAX_INTEGRAL_ERROR)
+    {
+      pitchCumulativeError = MAX_INTEGRAL_ERROR;
+    }
+    else if(pitchCumulativeError<-MAX_INTEGRAL_ERROR)
+    {
+      pitchCumulativeError = -MAX_INTEGRAL_ERROR;
+    }
     
-    pitch_correction = pitch_kP * pitch_error + integral_term + pitch_kD * pitchDifference;
+    pitch_correction = pitch_kP * pitch_error + pitchCumulativeError*pitch_kI + pitch_kD * pitchDifference;
     prevpitch_error = pitch_error;
 
     absolute_pitch_correction = absolute(pitch_correction);
@@ -182,7 +197,7 @@ void http_server(void *arg)
     do {
      err = netconn_accept(conn, &newconn);
      if (err == ERR_OK) {
-       http_server_netconn_serve(newconn,&setpoint,&forward_angle,&pitch_kP,&pitch_kD,&pitch_kI,&yaw_kP,&yaw_kD,&yaw_kI);
+       http_server_netconn_serve(newconn,&setpoint,&pitch_kP,&pitch_kD,&pitch_kI,&yaw_kP,&yaw_kD,&yaw_kI);
        netconn_delete(newconn);
      }
     } while(err == ERR_OK);
@@ -253,20 +268,20 @@ void balance_with_line_follow_task(void *arg)
 
         else
         {
-            forward_angle = setpoint + 1.5;
+            forward_angle = setpoint + 3.5;
 
             left_pwm = constrain((absolute_pitch_correction + yaw_correction), MIN_PWM, MAX_PWM);
             right_pwm = constrain((absolute_pitch_correction - yaw_correction), MIN_PWM, MAX_PWM);
 
             if(yaw_error>15)
             {
-                right_pwm+=7.5;
-                left_pwm-=7.5;   
+                right_pwm+=10;
+                left_pwm-=10;   
             }
             else if(yaw_error<-15)
             {
-                left_pwm+=7.5;
-                right_pwm-=7.5;
+                left_pwm+=10;
+                right_pwm-=10;
             }
 
             // SET DIRECTION OF BOT FOR BALANCING
