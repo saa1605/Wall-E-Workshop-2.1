@@ -2,3 +2,5 @@
 .DS_Store
 */.DS_Store
 */main/.DS_Store
+*/sdkconfig
+*/sdkconfig.old

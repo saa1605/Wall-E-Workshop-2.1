@@ -26,6 +26,6 @@
 
 esp_err_t event_handler(void *ctx, system_event_t *event);
 void initialise_wifi();
-void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *forward_angle,float *pitchKp,float *pitchKd,float *pitchKi,float *yaw_kP,float *yaw_kD,float *yaw_kI);
+void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitchKp,float *pitchKd,float *pitchKi,float *yaw_kP,float *yaw_kD,float *yaw_kI);
 
 #endif
