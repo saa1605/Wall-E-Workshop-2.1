@@ -1,7 +1,32 @@
+/*
+
+Copyright (c) 2018, Society of Robotics and Automation, VJTI
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+
 #include "TUNING.h"
 
 static EventGroupHandle_t wifi_event_group;
 
+//Control function for Wifi initialisation and working
 esp_err_t event_handler(void *ctx, system_event_t *event)
 {
     const int CONNECTED_BIT = BIT0;
@@ -23,6 +48,7 @@ esp_err_t event_handler(void *ctx, system_event_t *event)
     return ESP_OK;
 }
 
+//Intialise WIFI for ESP32
 void initialise_wifi(void)
 
 {
@@ -44,10 +70,11 @@ void initialise_wifi(void)
 
 }
 
+//Display the webserver, and change values as set on the webpage
 void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitchKp,float *pitchKd,float *pitchKi,float *yaw_kP,float *yaw_kD,float *yaw_kI)
 {
   const static char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
-  const static char http_index_hml[] = "<html><head><title></title></head><body><table border = 1; cellspacing=0; width=70%><tr><td bgcolor = #9A9594; height = 40px; colspan=2 ; align=center ><b><i>TUNING</i></b></td></tr><tr><td height=25px; bgcolor=#DAD7D7> <a href =\"a\">Increase Pitch Kp</a></td><td height=25px; bgcolor=#DAD7D7><a href =\"b\">Decrease Pitch Kp</a> </td></tr><tr><td height=25px><a href =\"c\">Increase Pitch Kd </a></td><td height=25px> <a href =\"d\">Decrease Pitch Kd </a></td></tr><tr><td height=25px; bgcolor=#DAD7D7> <a href =\"e\">Increase Pitch Ki </a></td><td height=25px; bgcolor=#DAD7D7> <a href =\"g\"> Decrease Pitch Ki </a></td></tr><tr><td height=25px> <a href =\"h\">Increase Yaw Kp </a></td><td height=25px> <a href =\"i\">Decrease Yaw Kp </a></td></tr><tr><td height=25px; bgcolor=#DAD7D7> <a href =\"j\">Increase Yaw Kd </a></td><td height=25px; bgcolor=#DAD7D7> <a href =\"k\">Decrease Yaw Kd </a></td></tr><tr><td height=25px> <a href =\"l\">Increase Yaw Ki </a></td><td height=25px> <a href =\"m\">Decrease Yaw Ki </a></td></tr><tr><td height=25px; bgcolor=#DAD7D7><a href =\"v\">Increase Setpoint</a></td><td height=25px; bgcolor=#DAD7D7><a href =\"w\">Decrease Setpoint</a></td></tr></table></body></html></body></html>";
+  const static char http_index_hml[] = "<html><head><title></title></head><body><table border = 1; cellspacing=0; width=70%><tr><td bgcolor = #9A9594; height = 40px; colspan=2 ; align=center ><b><i>TUNING</i></b></td></tr><tr><td height=25px; bgcolor=#DAD7D7> <a href =\"a\">Increase Pitch Kp</a></td><td height=25px; bgcolor=#DAD7D7><a href =\"b\">Decrease Pitch Kp</a> </td></tr><tr><td height=25px><a href =\"c\">Increase Pitch Kd </a></td><td height=25px> <a href =\"d\">Decrease Pitch Kd </a></td></tr><tr><td height=25px; bgcolor=#DAD7D7> <a href =\"e\">Increase Pitch Ki </a></td><td height=25px; bgcolor=#DAD7D7> <a href =\"g\"> Decrease Pitch Ki </a></td></tr><tr><td height=25px> <a href =\"h\">Increase Yaw Kp </a></td><td height=25px> <a href =\"i\">Decrease Yaw Kp </a></td></tr><tr><td height=25px; bgcolor=#DAD7D7> <a href =\"j\">Increase Yaw Kd </a></td><td height=25px; bgcolor=#DAD7D7> <a href =\"k\">Decrease Yaw Kd </a></td></tr><tr><td height=25px> <a href =\"l\">Increase Yaw Ki </a></td><td height=25px> <a href =\"m\">Decrease Yaw Ki </a></td></tr><tr><td height=25px; bgcolor=#DAD7D7><a href =\"n\">Increase Setpoint</a></td><td height=25px; bgcolor=#DAD7D7><a href =\"o\">Decrease Setpoint</a></td></tr></table></body></html></body></html>";
   char pKp[10];
   char pKd[10];
   char pKi[10];
@@ -55,6 +82,7 @@ void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitch
   char yKd[10];
   char yKi[10];
   char setPoint[15];
+  char forwardAngle[15];
   char enter[]="<br>";
   char pitchArr[]="Pitch Parameters";
   char PitchKpArr[]="Kp = ";
@@ -65,6 +93,7 @@ void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitch
   char YawKdArr[]="Kd = ";
   char YawKiArr[]="Ki = ";
   char setpointArr[]="setpoint = ";
+  char forwardAngleArr[]="forward_angle = ";
 
   struct netbuf *inbuf;
   char *buf;
@@ -120,19 +149,13 @@ void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitch
        if(buf[5]=='m'){
           *yaw_kI-=0.01;
        }
-       if(buf[5]=='v'){
+     
+      if(buf[5]=='n'){
           *setpoint +=0.5;
        }
-       if(buf[5]=='w'){
+      if(buf[5]=='o'){
           *setpoint-=0.5;
        }
-       // if(buf[5]=='n'){
-       //    *forward_angle+=0.5;
-       // }
-       // if(buf[5]=='o'){
-       //    *forward_angle-=0.5;
-       // }
-
 
       gcvt(*pitchKp,5,pKp);
       gcvt(*pitchKd,5,pKd);
@@ -141,12 +164,8 @@ void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitch
       gcvt(*yaw_kD,5,yKd);
       gcvt(*yaw_kI,5,yKi);
       gcvt(*setpoint,5,setPoint);
-      // gcvt(*forward_angle,5,forwardAngle);
-      
-      
-
+  
       netconn_write(conn, http_html_hdr, sizeof(http_html_hdr)-1, NETCONN_NOCOPY);
-
 
       netconn_write(conn, http_index_hml, sizeof(http_index_hml)-1, NETCONN_NOCOPY);
       netconn_write(conn, pitchArr, sizeof(pitchArr)-1 , NETCONN_NOCOPY);
@@ -174,10 +193,6 @@ void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitch
       netconn_write(conn, setpointArr, sizeof(setpointArr)-1 , NETCONN_NOCOPY);
       netconn_write(conn, setPoint, sizeof(setPoint)-1, NETCONN_NOCOPY);
       netconn_write(conn, enter, sizeof(enter)-1, NETCONN_NOCOPY);   
-      // netconn_write(conn, forwardAngleArr, sizeof(forwardAngleArr)-1 , NETCONN_NOCOPY);
-      // netconn_write(conn, forwardAngle, sizeof(forwardAngle)-1, NETCONN_NOCOPY);
-      // netconn_write(conn, enter, sizeof(enter)-1, NETCONN_NOCOPY);  
-        
     }
 
   }

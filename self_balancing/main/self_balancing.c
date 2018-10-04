@@ -17,6 +17,9 @@
 #define MAX_PWM 90 
 #define MIN_PWM 60
 
+#define WIFI_SSID "SSID"
+#define WIFI_PASSWORD "PASSWORD"
+
 //Array to store channels of ADC
 adc1_channel_t channel[4] = {ADC_CHANNEL_7, ADC_CHANNEL_6, ADC_CHANNEL_0, ADC_CHANNEL_3};
 

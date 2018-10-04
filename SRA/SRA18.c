@@ -1,7 +1,30 @@
+/*
+
+Copyright (c) 2018, Society of Robotics and Automation, VJTI
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+
 #include "SRA18.h"
 
 //Functions for custom adjustments
-
 float map(float x, float min_in, float max_in, float min_out, float max_out)
 {
     return (x - min_in) * (max_out - min_out) / (max_in - min_in) + min_out;
@@ -28,6 +51,7 @@ float absolute(float number)
     return number;
 }
 
+//Assign GPIO 2 and 15 to buttons
 void enable_buttons()
 {
     gpio_set_direction(BUTTON_1,GPIO_MODE_INPUT);
@@ -36,51 +60,35 @@ void enable_buttons()
     gpio_set_pull_mode(BUTTON_2,GPIO_PULLUP_ONLY);
 }
 
+//Check if the specified button is pressed, returns 1 if pressed
 int pressed_switch(int button_num)
 {
     return !gpio_get_level(button_num);    
 }
 
-//LED
-void led_blink()
-{
-    gpio_set_direction(LED_1,GPIO_MODE_OUTPUT);
-    gpio_set_direction(LED_2,GPIO_MODE_OUTPUT);   
-}
-
-//ADC
-
+//Change ADC parameters if required
  void adc1_init(adc1_channel_t channel[4])
 {
-    //Configure ADC
-
-    static const adc_atten_t atten = ADC_ATTEN_11db;
-
     adc1_config_width(ADC_WIDTH_BIT_12);
     
     for(int i = 0;i < 4;i++)
     {
-      adc1_config_channel_atten(channel[i], atten);
+      adc1_config_channel_atten(channel[i], ADC_ATTEN_11db);
     }
 }
 
-//MCPWM
 
+//Initialise GPIOs for MCPWM
  void mcpwm_gpio_initialize()
 {
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, GPIO_PWM0A_OUT);
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, GPIO_PWM0B_OUT);
 }
 
-/**
- * @brief Configure MCPWM module for brushed dc motor
- */
+//Intialise MCPWM 
  void mcpwm_initialize()
 {
-    //1. mcpwm gpio initialization
     mcpwm_gpio_initialize();
-
-    //2. initial mcpwm configuration
     printf("Configuring Initial Parameters of mcpwm...\n");
     mcpwm_config_t pwm_config;
     pwm_config.frequency = 20000;    //frequency = 500Hz,
@@ -98,31 +106,29 @@ void led_blink()
     printf("Set direction to GPIO pins...\n");
 }
 
-
+//Functions to control bot motion
  void bot_forward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle1, float duty_cycle2)
 {
-    // printf("%s\n","BOT FORWARD");
     mcpwm_set_duty(mcpwm_num, timer_num, MCPWM_OPR_A, duty_cycle1);
     mcpwm_set_duty(mcpwm_num, timer_num, MCPWM_OPR_B, duty_cycle2);
     gpio_set_level(GPIO_NUM0,0);
     gpio_set_level(GPIO_NUM1,1);
     gpio_set_level(GPIO_NUM2,0);
     gpio_set_level(GPIO_NUM3,1);
-    mcpwm_set_duty_type(mcpwm_num, timer_num, MCPWM_OPR_A, MCPWM_DUTY_MODE_0); //call this each time, if operator was previously in low/high state
-    mcpwm_set_duty_type(mcpwm_num, timer_num, MCPWM_OPR_B, MCPWM_DUTY_MODE_0); //call this each time, if operator was previously in low/high state
+    mcpwm_set_duty_type(mcpwm_num, timer_num, MCPWM_OPR_A, MCPWM_DUTY_MODE_0); 
+    mcpwm_set_duty_type(mcpwm_num, timer_num, MCPWM_OPR_B, MCPWM_DUTY_MODE_0); 
 }
 
  void bot_backward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle1, float duty_cycle2)
 {
-    // printf("%s\n","BOT BACKWARD");
     mcpwm_set_duty(mcpwm_num, timer_num, MCPWM_OPR_A, duty_cycle1);
     mcpwm_set_duty(mcpwm_num, timer_num, MCPWM_OPR_B, duty_cycle2);
     gpio_set_level(GPIO_NUM0,1);
     gpio_set_level(GPIO_NUM1,0);
     gpio_set_level(GPIO_NUM2,1);
     gpio_set_level(GPIO_NUM3,0);
-    mcpwm_set_duty_type(mcpwm_num, timer_num, MCPWM_OPR_A, MCPWM_DUTY_MODE_0); //call this each time, if operator was previously in low/high state
-    mcpwm_set_duty_type(mcpwm_num, timer_num, MCPWM_OPR_B, MCPWM_DUTY_MODE_0); //call this each time, if operator was previously in low/high state
+    mcpwm_set_duty_type(mcpwm_num, timer_num, MCPWM_OPR_A, MCPWM_DUTY_MODE_0); 
+    mcpwm_set_duty_type(mcpwm_num, timer_num, MCPWM_OPR_B, MCPWM_DUTY_MODE_0); 
 }
 
  void bot_spot_left(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle1, float duty_cycle2)
