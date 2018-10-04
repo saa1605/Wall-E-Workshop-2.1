@@ -17,17 +17,6 @@
 #define MAX_PWM 90 
 #define MIN_PWM 60
 
-//Wifi Parameters 
-#define EXAMPLE_WIFI_SSID CONFIG_WIFI_SSID
-#define EXAMPLE_WIFI_PASS CONFIG_WIFI_PASS
-
-wifi_config_t wifi_config = {
-    .sta = {
-        .ssid = EXAMPLE_WIFI_SSID,
-        .password = EXAMPLE_WIFI_PASS,
-    },
-};
-
 //Array to store channels of ADC
 adc1_channel_t channel[4] = {ADC_CHANNEL_7, ADC_CHANNEL_6, ADC_CHANNEL_0, ADC_CHANNEL_3};
 
@@ -64,18 +53,6 @@ void calculate_pitch_error()
     pitchDifference = (pitch_error - prevpitch_error);
     pitch_cumulative_error += pitch_error;
 
-    // if(prevpitch_error*pitch_error < 0)
-    // {
-    //   pitch_cumulative_error = 0;
-    // }
-
-    // integral_term = pitch_cumulative_error*pitch_kI;   
-
-    // if(integral_term>MAX_PITCH_CUMULATIVE_ERROR)
-    //     integral_term = MAX_PITCH_CUMULATIVE_ERROR;
-    // else if(integral_term<-MAX_PITCH_CUMULATIVE_ERROR)
-    //     integral_term= -MAX_PITCH_CUMULATIVE_ERROR;
-
     if(pitch_cumulative_error>MAX_PITCH_CUMULATIVE_ERROR)
     {
       pitch_cumulative_error = MAX_PITCH_CUMULATIVE_ERROR;
@@ -84,8 +61,6 @@ void calculate_pitch_error()
     {
       pitch_cumulative_error = -MAX_PITCH_CUMULATIVE_ERROR;
     }
-
-
     
     pitch_correction = pitch_kP * pitch_error + pitch_kI*pitch_cumulative_error + pitch_kD * pitchDifference;
     prevpitch_error = pitch_error;
@@ -108,9 +83,8 @@ void print_info()
     printf("\n");
 }
 
-/*
-  Create an HTTP server to tune variables wirelessly 
-*/
+
+//Create an HTTP server to tune variables wirelessly 
 void http_server(void *arg)
 {
     printf("%s\n", "http task");
@@ -130,9 +104,7 @@ void http_server(void *arg)
     netconn_delete(conn);
 }
 
-/*
-  The main task to balance the robot
-*/
+//The main task to balance the robot
 void balance_task(void *arg)
 {
     uint8_t* acce_rd = (uint8_t*) malloc(BUFF_SIZE);
@@ -153,6 +125,7 @@ void balance_task(void *arg)
       calculate_angle(acce_rd,gyro_rd,acce_raw_value,gyro_raw_value,initial_acce_angle,&roll_angle,&pitch_angle);  //Function to calculate pitch angle based on intial accelerometer angle
       calculate_pitch_error();
       
+      //constrain PWM values between max and min
       left_pwm = constrain((absolute_pitch_correction), MIN_PWM, MAX_PWM);
       right_pwm = constrain((absolute_pitch_correction), MIN_PWM, MAX_PWM);
 
@@ -169,18 +142,16 @@ void balance_task(void *arg)
       { 
           bot_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
       }
-      
 
-      print_info();
-    }      
-}
+    }  //End of while loop
+
+} //End of task
 
 void app_main()
 {
     
     nvs_flash_init();
-    initialise_wifi(wifi_config);
-    
+    initialise_wifi();
     xTaskCreate(balance_task,"balance task",100000,NULL,1,NULL);
     xTaskCreate(&http_server, "http_server", 10000, NULL, 2, NULL);
 }
