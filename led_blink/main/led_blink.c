@@ -1,15 +1,11 @@
 //C Headers
-
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
 
-
-
 //Components
-
 #include "MPU.h"
 #include "SRA18.h"
 #include "TUNING.h"
