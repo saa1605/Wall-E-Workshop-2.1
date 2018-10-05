@@ -17,7 +17,7 @@
 void blink_task(void *arg)
 {
 	/*
-		Set the The LED Pins : GPIO 0 and GPIO 15 to OUTPUT
+		Set the The LED Pins : GPIO 0 and GPIO 5 to OUTPUT
 	*/
 
 	gpio_set_direction(LED_1,GPIO_MODE_OUTPUT);
