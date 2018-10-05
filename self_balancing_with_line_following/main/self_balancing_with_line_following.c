@@ -31,7 +31,7 @@ float pitch_kP=  15;//5.85;
 float pitch_kI=  0.075;//95;          
 float pitch_kD=  9;
 
-float setpoint = 1;
+float setpoint = 0;
 float initial_acce_angle = 0;
 float forward_angle = 0;
 
@@ -196,6 +196,10 @@ void balance_with_line_follow_task(void *arg)
         {
             initial_acce_angle = setpoint;
 
+            //constrain PWM values between max and min values
+            right_pwm = constrain((absolute_pitch_correction),MIN_PWM,MAX_PWM);
+            left_pwm = constrain((absolute_pitch_correction),MIN_PWM,MAX_PWM);
+
             // SET DIRECTION OF BOT FOR BALANCING
             if (pitch_error > 1)
             {
@@ -212,11 +216,6 @@ void balance_with_line_follow_task(void *arg)
                 initial_acce_angle = forward_angle;
                 balanced = true;
             }
-
-            //constrain PWM values between max and min values
-            right_pwm = constrain((absolute_pitch_correction+ yaw_correction),MIN_PWM,MAX_PWM);
-            left_pwm = constrain((absolute_pitch_correction- yaw_correction),MIN_PWM,MAX_PWM);
-
         }
 
         else
@@ -230,13 +229,13 @@ void balance_with_line_follow_task(void *arg)
             //Extra yaw correction during turns
             if(yaw_error>10)
             {
-                right_pwm+=10;
-                left_pwm-=10;   
+                right_pwm+=15;
+                left_pwm-=15;   
             }
             else if(yaw_error<-10)
             {
-                left_pwm+=10;
-                right_pwm-=10;
+                left_pwm+=15;
+                right_pwm-=15;
             }
 
             // SET DIRECTION OF BOT FOR BALANCING
@@ -255,7 +254,7 @@ void balance_with_line_follow_task(void *arg)
             }
 
             // Change intial_acce_angle back to setpoint if bot exceeds forward_angle buffer
-            if(pitch_error>2 || pitch_error < MAX_PITCH_ERROR)
+            if(pitch_error>3 || pitch_error < MAX_PITCH_ERROR)
             {
                 initial_acce_angle = setpoint;
                 balanced = false;
