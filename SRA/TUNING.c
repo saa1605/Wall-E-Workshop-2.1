@@ -49,21 +49,20 @@ esp_err_t event_handler(void *ctx, system_event_t *event)
 }
 
 //Intialise WIFI for ESP32
-void initialise_wifi(void)
-
+void initialise_wifi()
 {
     tcpip_adapter_init();
     wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     wifi_config_t wifi_config = {
         .sta = {
             .ssid = EXAMPLE_WIFI_SSID,
             .password = EXAMPLE_WIFI_PASS,
         },
     };
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
+    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
     ESP_ERROR_CHECK( esp_wifi_start() );
@@ -82,7 +81,6 @@ void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitch
   char yKd[10];
   char yKi[10];
   char setPoint[15];
-  char forwardAngle[15];
   char enter[]="<br>";
   char pitchArr[]="Pitch Parameters";
   char PitchKpArr[]="Kp = ";
@@ -93,7 +91,7 @@ void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitch
   char YawKdArr[]="Kd = ";
   char YawKiArr[]="Ki = ";
   char setpointArr[]="setpoint = ";
-  char forwardAngleArr[]="forward_angle = ";
+
 
   struct netbuf *inbuf;
   char *buf;

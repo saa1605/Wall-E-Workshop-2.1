@@ -45,7 +45,8 @@ SOFTWARE.
 #include "lwip/api.h"
 #include <stdlib.h>
 
-#define EXAMPLE_WIFI_SSID "SSID"
+
+#define EXAMPLE_WIFI_SSID "WIFI"
 #define EXAMPLE_WIFI_PASS "PASSWORD"
 
 //Control function for Wifi initialisation and working
