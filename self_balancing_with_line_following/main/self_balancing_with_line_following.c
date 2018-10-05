@@ -9,7 +9,7 @@
 #include "TUNING.h"
 
 //Limiting Parameters
-#define MAX_PITCH_CORRECTION 85
+#define MAX_PITCH_CORRECTION 80
 #define MAX_PITCH_CUMULATIVE_ERROR 750
 
 #define MAX_PWM 100
@@ -18,7 +18,8 @@
 #define MAX_PITCH_ERROR -2.5
 
 //ADC Channels
-adc1_channel_t channel[4] = {ADC_CHANNEL_3,ADC_CHANNEL_0,ADC_CHANNEL_6,ADC_CHANNEL_7};
+// adc1_channel_t channel[4] = {ADC_CHANNEL_3,ADC_CHANNEL_0,ADC_CHANNEL_6,ADC_CHANNEL_7};
+adc1_channel_t channel[4] = {ADC_CHANNEL_7,ADC_CHANNEL_6,ADC_CHANNEL_0,ADC_CHANNEL_3};
 
 //Line Following Tuning Parameters
 float yaw_kP= 5;
@@ -30,7 +31,7 @@ float pitch_kP=  15;//5.85;
 float pitch_kI=  0.075;//95;          
 float pitch_kD=  9;
 
-float setpoint = 4.5;
+float setpoint = 1;
 float initial_acce_angle = 0;
 float forward_angle = 0;
 
@@ -42,7 +43,7 @@ float pitch_angle=0,roll_angle=0,absolute_pitch_correction=0, pitch_error=0, pre
 
 //FOR LINE FOLLOWING
 float yaw_error=0, yaw_prev_error=0, yaw_difference=0, yaw_cumulative_error=0, yaw_correction=0;
-int weights[4] = {-3,-1,1,3};
+int weights[4] = {3,1,-1,-3};
 
 uint32_t adc_reading[4];
 float sensor_value[4];
@@ -92,9 +93,9 @@ static void calculate_yaw_error()
     if(all_black_flag == 1)
     {
         if(yaw_error > 0)
-            pos = 3;
+            pos = 2.5;
         else
-            pos = -3;
+            pos = -2.5;
     }
 
     yaw_error = pos;
@@ -142,24 +143,6 @@ void calculate_pitch_error()
     absolute_pitch_correction = absolute(pitch_correction);
     absolute_pitch_correction = constrain(absolute_pitch_correction,0,MAX_PITCH_CORRECTION);
 }
-
-void print_info()
-{        
-    
-    // printf("ROLL ANGLE: %f\n", complimentary_angle[0]);
-    // printf("PITCH ANGLE:%f\t",pitch_angle);
-    // printf("PITCH ERROR%f\t",pitch_error);
-    printf("YAW ERROR: %f\t",yaw_error);
-    // printf("YAW CORRECTION: %f\t",yaw_correction);  
-    // printf("PITCH CORRECTION %f\n",pitch_correction);
-    // printf("ABSOLUTE PITCH CORRECTION: %f\t",absolute_pitch_correction);
-    // printf("YAW CORRECTION: %f\t", yaw_correction);
-    // printf("LEFT PWM: %f\t",left_pwm);
-    // printf("RIGHT PWM: %f\n",right_pwm);
-
-    printf("\n");
-}
-
 
 //Create an HTTP server to tune variables wirelessly 
 void http_server(void *arg)
@@ -231,26 +214,26 @@ void balance_with_line_follow_task(void *arg)
             }
 
             //constrain PWM values between max and min values
-            left_pwm = constrain((absolute_pitch_correction),MIN_PWM,MAX_PWM);
-            right_pwm = constrain((absolute_pitch_correction),MIN_PWM,MAX_PWM);
+            right_pwm = constrain((absolute_pitch_correction+ yaw_correction),MIN_PWM,MAX_PWM);
+            left_pwm = constrain((absolute_pitch_correction- yaw_correction),MIN_PWM,MAX_PWM);
 
         }
 
         else
         {
-            forward_angle = setpoint + 3.5;
+            forward_angle = setpoint + 2.5;
 
             //constrain PWM values between max and min values
-            left_pwm = constrain((absolute_pitch_correction + yaw_correction), MIN_PWM, MAX_PWM);
-            right_pwm = constrain((absolute_pitch_correction - yaw_correction), MIN_PWM, MAX_PWM);
+            right_pwm = constrain((absolute_pitch_correction + yaw_correction), MIN_PWM, MAX_PWM);
+            left_pwm = constrain((absolute_pitch_correction - yaw_correction), MIN_PWM, MAX_PWM);
 
             //Extra yaw correction during turns
-            if(yaw_error>15)
+            if(yaw_error>10)
             {
                 right_pwm+=10;
                 left_pwm-=10;   
             }
-            else if(yaw_error<-15)
+            else if(yaw_error<-10)
             {
                 left_pwm+=10;
                 right_pwm-=10;

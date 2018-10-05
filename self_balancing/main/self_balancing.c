@@ -31,7 +31,7 @@ float pitch_kI=  0.075;//95;
 float pitch_kD=  9;
 
 //Configuration Variables
-float setpoint = 4.5;
+float setpoint = 1;
 float initial_acce_angle = 4.5;
 float forward_angle = -4.5; 
 
