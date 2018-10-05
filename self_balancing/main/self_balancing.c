@@ -69,21 +69,6 @@ void calculate_pitch_error()
     absolute_pitch_correction = constrain(absolute_pitch_correction,0,MAX_PITCH_CORRECTION);
 }
 
-//Debugging
-void print_info()
-{        
-    // printf("PITCH ANGLE:%f\t",pitch_angle);
-    // printf("PITCH ERROR%f\t",pitch_error);
-    // printf("PITCH CORRECTION %f\n",pitch_correction);
-    // printf("ABSOLUTE PITCH CORRECTION: %f\t",absolute_pitch_correction);
-    // printf("INTEGRAL TERM %f\n",pitch_cumulative_error);
-    // printf("LEFT PWM: %f\t",left_pwm);
-    // printf("RIGHT PWM: %f\n",right_pwm);
-
-    printf("\n");
-}
-
-
 //Create an HTTP server to tune variables wirelessly 
 void http_server(void *arg)
 {
