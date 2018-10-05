@@ -49,20 +49,21 @@ esp_err_t event_handler(void *ctx, system_event_t *event)
 }
 
 //Intialise WIFI for ESP32
-void initialise_wifi()
+void initialise_wifi(void)
+
 {
     tcpip_adapter_init();
     wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
+    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     wifi_config_t wifi_config = {
         .sta = {
             .ssid = EXAMPLE_WIFI_SSID,
             .password = EXAMPLE_WIFI_PASS,
         },
     };
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
     ESP_ERROR_CHECK( esp_wifi_start() );
@@ -70,17 +71,19 @@ void initialise_wifi()
 }
 
 //Display the webserver, and change values as set on the webpage
-void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitchKp,float *pitchKd,float *pitchKi,float *yaw_kP,float *yaw_kD,float *yaw_kI)
+void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitchKp,float *pitchKd,float *pitchKi,float *yaw_kP,float *yaw_kD,float *yaw_kI, float *forward_offset, float *forward_buffer)
 {
   const static char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
-  const static char http_index_hml[] = "<html><head><title></title></head><body><table border = 1; cellspacing=0; width=70%><tr><td bgcolor = #9A9594; height = 40px; colspan=2 ; align=center ><b><i>TUNING</i></b></td></tr><tr><td height=25px; bgcolor=#DAD7D7> <a href =\"a\">Increase Pitch Kp</a></td><td height=25px; bgcolor=#DAD7D7><a href =\"b\">Decrease Pitch Kp</a> </td></tr><tr><td height=25px><a href =\"c\">Increase Pitch Kd </a></td><td height=25px> <a href =\"d\">Decrease Pitch Kd </a></td></tr><tr><td height=25px; bgcolor=#DAD7D7> <a href =\"e\">Increase Pitch Ki </a></td><td height=25px; bgcolor=#DAD7D7> <a href =\"g\"> Decrease Pitch Ki </a></td></tr><tr><td height=25px> <a href =\"h\">Increase Yaw Kp </a></td><td height=25px> <a href =\"i\">Decrease Yaw Kp </a></td></tr><tr><td height=25px; bgcolor=#DAD7D7> <a href =\"j\">Increase Yaw Kd </a></td><td height=25px; bgcolor=#DAD7D7> <a href =\"k\">Decrease Yaw Kd </a></td></tr><tr><td height=25px> <a href =\"l\">Increase Yaw Ki </a></td><td height=25px> <a href =\"m\">Decrease Yaw Ki </a></td></tr><tr><td height=25px; bgcolor=#DAD7D7><a href =\"n\">Increase Setpoint</a></td><td height=25px; bgcolor=#DAD7D7><a href =\"o\">Decrease Setpoint</a></td></tr></table></body></html></body></html>";
-  char pKp[10];
-  char pKd[10];
-  char pKi[10];
-  char yKp[10];
-  char yKd[10];
-  char yKi[10];
-  char setPoint[15];
+  const static char http_index_hml[] = "<html><head><title></title></head><body><table border = 1; cellspacing=0; width=70%><tr><td height = 40px; colspan=2 ; align=center ><b><i>TUNING</i></b></td></tr><tr><td height=25px; bgcolor=#DAD7D7> <a href =\"a\">Increase Pitch Kp</a></td><td height=25px; bgcolor=#DAD7D7><a href =\"b\">Decrease Pitch Kp</a> </td></tr><tr><td height=25px><a href =\"c\">Increase Pitch Kd </a></td><td height=25px> <a href =\"d\">Decrease Pitch Kd </a></td></tr><tr><td height=25px; bgcolor=#DAD7D7> <a href =\"e\">Increase Pitch Ki </a></td><td height=25px; bgcolor=#DAD7D7> <a href =\"g\"> Decrease Pitch Ki </a></td></tr><tr><td height=25px> <a href =\"h\">Increase Yaw Kp </a></td><td height=25px> <a href =\"i\">Decrease Yaw Kp </a></td></tr><tr><td height=25px; bgcolor=#DAD7D7> <a href =\"j\">Increase Yaw Kd </a></td><td height=25px; bgcolor=#DAD7D7> <a href =\"k\">Decrease Yaw Kd </a></td></tr><tr><td height=25px> <a href =\"l\">Increase Yaw Ki </a></td><td height=25px> <a href =\"m\">Decrease Yaw Ki </a></td></tr><tr><td height=25px; bgcolor=#DAD7D7><a href =\"n\">Increase Setpoint</a></td><td height=25px; bgcolor=#DAD7D7><a href =\"o\">Decrease Setpoint</a></td></tr><tr><td height=25px><a href =\"p\">Increase Foward Angle Offset</a></td><td height=25px><a href =\"q\">Decrease foward Angle Offset</a></td></tr><tr><td height=25px; bgcolor=#DAD7D7><a href =\"r\">Increase Foward Angle Buffer</a></td><td height=25px; bgcolor=#DAD7D7><a href =\"s\">Decrease Forward Angle Buffer</a></td></tr></table></body></html></body></html>";
+  char pKp[5];
+  char pKd[5];
+  char pKi[5];
+  char yKp[5];
+  char yKd[5];
+  char yKi[5];
+  char setPoint[5];
+  char forwardOffset[5];
+  char forwardBuffer[5];
   char enter[]="<br>";
   char pitchArr[]="Pitch Parameters";
   char PitchKpArr[]="Kp = ";
@@ -91,7 +94,8 @@ void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitch
   char YawKdArr[]="Kd = ";
   char YawKiArr[]="Ki = ";
   char setpointArr[]="setpoint = ";
-
+  char forwardOffsetArr[]="Forward Offset = ";
+  char forwardBufferArr[]="Forward Buffer = ";
 
   struct netbuf *inbuf;
   char *buf;
@@ -154,14 +158,28 @@ void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitch
       if(buf[5]=='o'){
           *setpoint-=0.5;
        }
+       if(buf[5]=='p'){
+           *forward_offset+=0.5;
+        }
+        if(buf[5]=='q'){
+            *forward_offset-=0.5;
+        }
+        if(buf[5]=='r'){
+            *forward_buffer+=0.5;
+        }
+        if(buf[5]=='s'){
+            *forward_buffer-=0.5;
+         }
 
-      gcvt(*pitchKp,5,pKp);
-      gcvt(*pitchKd,5,pKd);
-      gcvt(*pitchKi,5,pKi);
-      gcvt(*yaw_kP,5,yKp);
-      gcvt(*yaw_kD,5,yKd);
-      gcvt(*yaw_kI,5,yKi);
-      gcvt(*setpoint,5,setPoint);
+      gcvt(*pitchKp,3,pKp);
+      gcvt(*pitchKd,3,pKd);
+      gcvt(*pitchKi,3,pKi);
+      gcvt(*yaw_kP,3,yKp);
+      gcvt(*yaw_kD,3,yKd);
+      gcvt(*yaw_kI,3,yKi);
+      gcvt(*setpoint,3,setPoint);
+	  gcvt(*forward_offset,3,forwardOffset);
+	  gcvt(*forward_buffer,3,forwardBuffer);
   
       netconn_write(conn, http_html_hdr, sizeof(http_html_hdr)-1, NETCONN_NOCOPY);
 
@@ -191,6 +209,12 @@ void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitch
       netconn_write(conn, setpointArr, sizeof(setpointArr)-1 , NETCONN_NOCOPY);
       netconn_write(conn, setPoint, sizeof(setPoint)-1, NETCONN_NOCOPY);
       netconn_write(conn, enter, sizeof(enter)-1, NETCONN_NOCOPY);   
+      netconn_write(conn, forwardOffsetArr, sizeof(forwardOffsetArr)-1 , NETCONN_NOCOPY);
+      netconn_write(conn, forwardOffset, sizeof(forwardOffset)-1, NETCONN_NOCOPY);
+      netconn_write(conn, enter, sizeof(enter)-1, NETCONN_NOCOPY); 
+      netconn_write(conn, forwardBufferArr, sizeof(forwardBufferArr)-1 , NETCONN_NOCOPY);
+      netconn_write(conn, forwardBuffer, sizeof(forwardBuffer)-1, NETCONN_NOCOPY);
+      netconn_write(conn, enter, sizeof(enter)-1, NETCONN_NOCOPY); 
     }
 
   }

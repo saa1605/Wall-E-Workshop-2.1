@@ -19,19 +19,21 @@
 adc1_channel_t channel[4] = {ADC_CHANNEL_7, ADC_CHANNEL_6, ADC_CHANNEL_0, ADC_CHANNEL_3};
 
 //Line Following Tuning Parameters
-float yaw_kP= 3;
+float yaw_kP= 5.1;
 float yaw_kI= 0;
-float yaw_kD= 0.5;
+float yaw_kD= 1.5;
 
 //Self Balancing Tuning Parameters
-float pitch_kP=  15;//5.85;       
+float pitch_kP=  15.1;//5.85;       
 float pitch_kI=  0.075;//95;          
 float pitch_kD=  9;
 
-//Configuration Variables
-float setpoint = 1;
-float initial_acce_angle = 4.5;
-float forward_angle = -4.5; 
+float setpoint = 0.5;
+float initial_acce_angle = 0;
+float forward_angle = 0;
+
+float forward_offset = 2.51;
+float forward_buffer = 3.1;
 
 //Error and correction values
 float absolute_pitch_correction = 0,absolute_pitch_angle = 0,pitch_angle = 0,roll_angle = 0,pitch_error=0, prevpitch_error=0, pitchDifference=0, pitch_cumulative_error=0, pitch_correction=0,integral_term=0;
@@ -79,7 +81,7 @@ void http_server(void *arg)
     do {
      err = netconn_accept(conn, &newconn);
      if (err == ERR_OK) {
-       http_server_netconn_serve(newconn,&setpoint,&pitch_kP,&pitch_kD,&pitch_kI,&yaw_kP,&yaw_kD,&yaw_kI);
+       http_server_netconn_serve(newconn,&setpoint,&pitch_kP,&pitch_kD,&pitch_kI,&yaw_kP,&yaw_kD,&yaw_kI, &forward_offset, &forward_buffer);
        netconn_delete(newconn);
      }
     } while(err == ERR_OK);

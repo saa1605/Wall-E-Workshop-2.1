@@ -21,18 +21,21 @@
 adc1_channel_t channel[4] = {ADC_CHANNEL_7,ADC_CHANNEL_6,ADC_CHANNEL_0,ADC_CHANNEL_3};
 
 //Line Following Tuning Parameters
-float yaw_kP= 5;
+float yaw_kP= 5.1;
 float yaw_kI= 0;
 float yaw_kD= 1.5;
 
 //Self Balancing Tuning Parameters
-float pitch_kP=  15;//5.85;       
+float pitch_kP=  15.1;//5.85;       
 float pitch_kI=  0.075;//95;          
 float pitch_kD=  9;
 
-float setpoint = 0;
+float setpoint = 0.5;
 float initial_acce_angle = 0;
 float forward_angle = 0;
+
+float forward_offset = 2.51;
+float forward_buffer = 3.1;
 
 //FOR BALANCING
 bool balanced = false;
@@ -155,7 +158,7 @@ void http_server(void *arg)
     do {
      err = netconn_accept(conn, &newconn);
      if (err == ERR_OK) {
-       http_server_netconn_serve(newconn,&setpoint,&pitch_kP,&pitch_kD,&pitch_kI,&yaw_kP,&yaw_kD,&yaw_kI);
+       http_server_netconn_serve(newconn,&setpoint,&pitch_kP,&pitch_kD,&pitch_kI,&yaw_kP,&yaw_kD,&yaw_kI, &forward_offset, &forward_buffer);
        netconn_delete(newconn);
      }
     } while(err == ERR_OK);
@@ -219,7 +222,7 @@ void balance_with_line_follow_task(void *arg)
 
         else
         {
-            forward_angle = setpoint + 2.5;
+            forward_angle = setpoint + forward_offset;
 
             //constrain PWM values between max and min values
             right_pwm = constrain((absolute_pitch_correction + yaw_correction), MIN_PWM, MAX_PWM);
@@ -253,7 +256,7 @@ void balance_with_line_follow_task(void *arg)
             }
 
             // Change intial_acce_angle back to setpoint if bot exceeds forward_angle buffer
-            if(pitch_error>3 || pitch_error < MAX_PITCH_ERROR)
+            if(pitch_error>forward_buffer|| pitch_error < MAX_PITCH_ERROR)
             {
                 initial_acce_angle = setpoint;
                 balanced = false;

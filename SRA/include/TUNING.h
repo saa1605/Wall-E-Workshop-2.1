@@ -45,7 +45,6 @@ SOFTWARE.
 #include "lwip/api.h"
 #include <stdlib.h>
 
-
 #define EXAMPLE_WIFI_SSID "WIFI"
 #define EXAMPLE_WIFI_PASS "PASSWORD"
 
@@ -56,6 +55,6 @@ esp_err_t event_handler(void *ctx, system_event_t *event);
 void initialise_wifi();
 
 //Display the webserver, and change values as set on the webpage
-void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitchKp,float *pitchKd,float *pitchKi,float *yaw_kP,float *yaw_kD,float *yaw_kI);
+void http_server_netconn_serve(struct netconn *conn,float *setpoint,float *pitchKp,float *pitchKd,float *pitchKi,float *yaw_kP,float *yaw_kD,float *yaw_kI, float *forward_offset, float *forward_buffer);
 
 #endif
