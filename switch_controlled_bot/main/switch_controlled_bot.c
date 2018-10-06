@@ -10,7 +10,7 @@
 #include "SRA18.h"
 #include "TUNING.h"
 
-void button_task(void *arg)
+void drive_task(void *arg)
 {
 
 	enable_buttons();	//Enable the buttons connected to GPIO 2 and GPIO 5
@@ -61,5 +61,5 @@ void app_main()
 	/*
 		Basic Function for task creation
 	*/
-    xTaskCreate(&button_task,"button task",4096,NULL,1,NULL);
+    xTaskCreate(&drive_task,"drive_task",4096,NULL,1,NULL);
 }

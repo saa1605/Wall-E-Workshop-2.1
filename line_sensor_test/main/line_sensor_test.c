@@ -17,7 +17,7 @@ adc1_channel_t channel[4] = {ADC_CHANNEL_7,ADC_CHANNEL_6,ADC_CHANNEL_0,ADC_CHANN
 
 int adc_reading[4];
 
-void blink_task(void *arg)
+void sensor_task(void *arg)
 {
 
 	while(1)
