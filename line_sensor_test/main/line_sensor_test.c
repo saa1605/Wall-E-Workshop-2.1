@@ -25,12 +25,8 @@ void sensor_task(void *arg)
 		for(int i =0;i<4;i++)
 		{
 			adc_reading[i] = adc1_get_raw(channel[i]);
+			printf("RAW %d: %d\t",i,adc_reading[i]);
 		}		
-
-		for(int i=0;i<4;i++)
-		{
-			printf("RAW:%d\t",adc_reading[i]);
-		}
 		printf("\n");
 	}
 	
@@ -42,5 +38,5 @@ void app_main()
 		Basic Function for task creation
 	*/
 
-    xTaskCreate(&blink_task,"blink task",4096,NULL,1,NULL);
+    xTaskCreate(&sensor_task,"blink task",4096,NULL,1,NULL);
 }

@@ -30,12 +30,12 @@ float pitch_kP=  15.1;//5.85;
 float pitch_kI=  0.075;//95;          
 float pitch_kD=  9;
 
-float setpoint = 0.5;
+float setpoint = 0;
 float initial_acce_angle = 0;
 float forward_angle = 0;
 
-float forward_offset = 2.51;
-float forward_buffer = 3.1;
+float forward_offset = 2.251;
+float forward_buffer = 3;
 
 //FOR BALANCING
 bool balanced = false;

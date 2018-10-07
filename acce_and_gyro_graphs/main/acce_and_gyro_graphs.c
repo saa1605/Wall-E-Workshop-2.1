@@ -20,6 +20,7 @@ void app_main()
   enable_buttons();
 
   int flag = 1;
+  timer = msec();
 
   while(1)
   {

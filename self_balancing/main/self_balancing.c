@@ -28,7 +28,7 @@ float pitch_kP=  15.1;//5.85;
 float pitch_kI=  0.075;//95;          
 float pitch_kD=  9;
 
-float setpoint = 0.5;
+float setpoint = 40;
 float initial_acce_angle = 0;
 float forward_angle = 0;
 
@@ -137,6 +137,6 @@ void app_main()
     
     nvs_flash_init();
     initialise_wifi();
-    xTaskCreate(balance_task,"balance task",100000,NULL,1,NULL);
+    xTaskCreate(&balance_task,"balance task",100000,NULL,1,NULL);
     xTaskCreate(&http_server, "http_server", 10000, NULL, 2, NULL);
 }

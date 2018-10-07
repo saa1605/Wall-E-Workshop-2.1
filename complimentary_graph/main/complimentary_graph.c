@@ -42,6 +42,7 @@ void app_main()
 
 
     complimentary_angle = (complimentary_angle + gyro_angle)*0.98 + acce_angle*0.02;
+    printf("%f \t  %f \t ",gyro_angle, acce_angle);
 
     printf("%f \n",complimentary_angle);
   }
