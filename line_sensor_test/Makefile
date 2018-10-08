@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := hello-world
+PROJECT_NAME := line_sensor_test
 
 include $(IDF_PATH)/make/project.mk
 

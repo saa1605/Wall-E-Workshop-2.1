@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := mpu6050_raw
+PROJECT_NAME := mpu_test
 
 include $(IDF_PATH)/make/project.mk
 

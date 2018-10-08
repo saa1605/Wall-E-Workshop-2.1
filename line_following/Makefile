@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := adc
+PROJECT_NAME := line_following
 
 include $(IDF_PATH)/make/project.mk
 
