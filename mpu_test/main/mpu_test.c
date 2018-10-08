@@ -9,10 +9,10 @@ float pitch_angle = 0,roll_angle = 0;
 void mpu_task(void *arg)
 {
     //Create buffers to store raw readings
-    uint8_t* acce_rd = (uint8_t*) malloc(BUFF_SIZE);
-    uint8_t* gyro_rd = (uint8_t*) malloc(BUFF_SIZE);
-    int16_t* acce_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
-    int16_t* gyro_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
+    uint8_t acce_rd[BUFF_SIZE];
+    uint8_t gyro_rd[BUFF_SIZE];
+    int16_t acce_raw_value[BUFF_SIZE/2];
+    int16_t gyro_raw_value[BUFF_SIZE/2];
 
     i2c_master_init();  //Initialise the I2C interface
     start_mpu();        //Intialise the MPU 

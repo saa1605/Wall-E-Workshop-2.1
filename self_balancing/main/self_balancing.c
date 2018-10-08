@@ -28,7 +28,7 @@ float pitch_kP=  15.1;//5.85;
 float pitch_kI=  0.075;//95;          
 float pitch_kD=  9;
 
-float setpoint = 40;
+float setpoint = 0;
 float initial_acce_angle = 0;
 float forward_angle = 0;
 
@@ -92,10 +92,11 @@ void http_server(void *arg)
 //The main task to balance the robot
 void balance_task(void *arg)
 {
-    uint8_t* acce_rd = (uint8_t*) malloc(BUFF_SIZE);
-    uint8_t* gyro_rd = (uint8_t*) malloc(BUFF_SIZE);
-    int16_t* acce_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
-    int16_t* gyro_raw_value = (int16_t*) malloc(BUFF_SIZE/2);
+    //Create buffers to store raw readings
+    uint8_t acce_rd[BUFF_SIZE];
+    uint8_t gyro_rd[BUFF_SIZE];
+    int16_t acce_raw_value[BUFF_SIZE/2];
+    int16_t gyro_raw_value[BUFF_SIZE/2];
 
     i2c_master_init();  //Initialise the I2C interface
     start_mpu();        //Intialise the MPU 
