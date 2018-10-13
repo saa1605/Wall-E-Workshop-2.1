@@ -51,7 +51,7 @@ void drive_task(void *arg)
 			printf("%s\n","BOT STOPPED");
 		}
 
-		vTaskDelay(100 / portTICK_PERIOD_MS);
+		vTaskDelay(100 / 10);
 	}
 	
 }

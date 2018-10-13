@@ -25,14 +25,14 @@ void blink_task(void *arg)
 		gpio_set_level(LED_1,0);	//Set LED1 ON
 		gpio_set_level(LED_2,0);	//Set LED2 ON
 
-		vTaskDelay(1000 / portTICK_PERIOD_MS);	//Wait for 1000ms
+		vTaskDelay(1000 / 10);	//Wait for 1000ms
 		
 
 
 		gpio_set_level(LED_1,1);	//Set LED1 OFF
 		gpio_set_level(LED_2,1);	//Set LED2 OFF
 
-		vTaskDelay(1000 / portTICK_PERIOD_MS);	//Wait for 1000ms
+		vTaskDelay(1000 / 10);	//Wait for 1000ms
 	}
 	
 }

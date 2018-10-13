@@ -179,7 +179,7 @@ void balance_with_line_follow_task(void *arg)
     start_mpu();
     mcpwm_initialize();
 
-    vTaskDelay(100/ portTICK_RATE_MS);
+    vTaskDelay(100/ 10);
     
 
     //SELF BALANCING AND LINE FOLLOWING

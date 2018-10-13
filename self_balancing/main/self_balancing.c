@@ -102,7 +102,7 @@ void balance_task(void *arg)
     start_mpu();        //Intialise the MPU 
     mcpwm_initialize(); 
     
-    vTaskDelay(100/ portTICK_RATE_MS);
+    vTaskDelay(100/ 10);
 
     while (1) 
     {
